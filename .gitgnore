@@ -1,7 +1,0 @@
-/examples/
-/menus/
-/odbc_tutorial/
-*.sql
-.DS_Store
-*.o
-menu
