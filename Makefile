@@ -7,7 +7,7 @@
 
 CC = gcc -g
 CFLAGS = -Wall -Wextra -pedantic -ansi
-LDLIBS = -L/opt/homebrew/lib -lodbc -lcurses -lpanel -lmenu -lform
+LDLIBS = -lodbc -lcurses -lpanel -lmenu -lform
 EXE = menu
 OBJ = $(EXE).o bpass.o loop.o  search.o windows.o
 
