@@ -35,11 +35,11 @@ available_seats AS (
       AND bp.boarding_no IS NULL
     ORDER BY s.aircraft_code, s.seat_no
 )
+INSERT INTO boarding_passes (ticket_no, flight_id, boarding_no, seat_no)
 SELECT 
     t.ticket_no,
-    LEFT(t.passenger_name, 20) AS passenger_name,
     t.flight_id,
-    t.scheduled_departure,
+    ROW_NUMBER() OVER (ORDER BY t.ticket_no, a.seat_no) as boarding_no,
     a.seat_no
 FROM tickets_to_assign t
 JOIN LATERAL (
@@ -48,4 +48,5 @@ JOIN LATERAL (
     WHERE a.flight_id = t.flight_id
     LIMIT 1
 ) a ON TRUE
-ORDER BY t.ticket_no, a.seat_no asc;
+ORDER BY t.ticket_no, a.seat_no;
+
