@@ -34,19 +34,23 @@ available_seats AS (
     WHERE t.book_ref = '000068'
       AND bp.boarding_no IS NULL
     ORDER BY s.aircraft_code, s.seat_no
+),
+assigned_seats AS (
+    SELECT 
+        t.ticket_no,
+        t.flight_id,
+        a.seat_no,
+        ROW_NUMBER() OVER (ORDER BY t.ticket_no, a.seat_no) as boarding_no
+    FROM tickets_to_assign t
+    JOIN LATERAL (
+        SELECT seat_no
+        FROM available_seats a
+        WHERE a.flight_id = t.flight_id
+        LIMIT 1
+    ) a ON TRUE
 )
 INSERT INTO boarding_passes (ticket_no, flight_id, boarding_no, seat_no)
-SELECT 
-    t.ticket_no,
-    t.flight_id,
-    ROW_NUMBER() OVER (ORDER BY t.ticket_no, a.seat_no) as boarding_no,
-    a.seat_no
-FROM tickets_to_assign t
-JOIN LATERAL (
-    SELECT seat_no
-    FROM available_seats a
-    WHERE a.flight_id = t.flight_id
-    LIMIT 1
-) a ON TRUE
-ORDER BY t.ticket_no, a.seat_no;
+SELECT ticket_no, flight_id, boarding_no, seat_no
+FROM assigned_seats
+RETURNING ticket_no, flight_id, boarding_no, seat_no;
 
