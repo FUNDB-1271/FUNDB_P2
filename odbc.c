@@ -23,6 +23,16 @@ void odbc_extract_error(char *fn, SQLHANDLE handle, SQLSMALLINT type) {
     } while( ret == SQL_SUCCESS );
 }
 
+void odbc_show_error(FILE *f, SQLSMALLINT handletype, SQLHANDLE handle) 
+{
+    SQLCHAR sqlState[6], message[512];
+    SQLINTEGER nativeError;
+    SQLSMALLINT messageLength;
+    if (SQLGetDiagRec(handletype, handle, 1, sqlState, &nativeError, message, sizeof(message), &messageLength) == SQL_SUCCESS) {
+        fprintf(f, "[%s] %s (SQL error code %d)\n", sqlState, message, nativeError);
+    }
+}
+
 /* STANDARD CONNECTION PROCEDURE */
 int odbc_connect(SQLHENV* env, SQLHDBC* dbc) {
     SQLRETURN ret;

@@ -5,3 +5,5 @@ odbc_tutorial/
 .DS_Store
 *.o
 menu
+.vscode/
+main
