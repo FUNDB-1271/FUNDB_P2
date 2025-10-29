@@ -1,8 +1,12 @@
 #ifndef AUX_H
 #define AUX_H
 
+#include <sql.h>
+#include <sqlext.h>
+#include <sqltypes.h>
+
 /* CONNECTION PARAMETERS, ADAPT TO YOUR SCENARIO */
-#define CONNECTION_PARS "DRIVER=PostgreSQL ANSI;DATABASE=test01;SERVER=localhost;PORT=5432;UID=alumnodb;PWD=alumnodb;"
+#define CONNECTION_PARS "DRIVER=PostgreSQL ANSI;DATABASE=flight;SERVER=localhost;PORT=5432;UID=alumnodb;PWD=alumnodb;"
 
 /* REPORT OF THE MOST RECENT ERROR USING HANDLE handle */
 void odbc_extract_error(char *fn, SQLHANDLE handle, SQLSMALLINT type);
@@ -12,5 +16,8 @@ int odbc_connect(SQLHENV* env, SQLHDBC* dbc);
 
 /* STANDARD DISCONNECTION PROCEDURE */
 int odbc_disconnect(SQLHENV env, SQLHDBC dbc);
+
+/* Show ODBC errors from a handle */
+void odbc_show_error(SQLSMALLINT handleType, SQLHANDLE handle);
 
 #endif
