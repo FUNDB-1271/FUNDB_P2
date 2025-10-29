@@ -9,7 +9,7 @@ CC = gcc -g
 CFLAGS = -Wall -Wextra -pedantic -ansi
 LDLIBS = -lodbc -lcurses -lpanel -lmenu -lform
 EXE = menu
-OBJ = $(EXE).o bpass.o loop.o  search.o windows.o
+OBJ = $(EXE).o bpass.o loop.o  search.o windows.o odbc.o
 
 ########################################################################################
 
@@ -28,12 +28,12 @@ PG_RESTORE = pg_restore
 
 ########################################################################################
 
-all: $(EXE)
+all: $(EXE) main
 
 
 %.o: %.c $(HEADERS)
 	@echo Compiling $<...
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) $(INCLUDE) -c -o $@ $<
 
 # link binary
 $(EXE): $(DEPS) $(OBJ)
@@ -63,8 +63,17 @@ shell:
 
 ########################################################################################
 
+main.o: main.c search.h windows.h odbc.h /opt/homebrew/include/sql.h \
+  /opt/homebrew/include/sqltypes.h /opt/homebrew/include/unixodbc.h \
+  /opt/homebrew/include/sqlext.h /opt/homebrew/include/sqlucode.h
+	$(CC) $(CFLAGS) $(INCLUDE) -c -o $@ $< 
+
+
+main: main.o windows.o odbc.o
+	$(CC) -o main $^ $(LDLIBS)
+
 clean :
-	rm -f *.o core $(EXE)
+	rm -f *.o core main.o $(EXE) main
 
 run:
 	./$(EXE)
