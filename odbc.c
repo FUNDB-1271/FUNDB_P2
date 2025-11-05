@@ -96,20 +96,3 @@ int odbc_disconnect(SQLHENV env, SQLHDBC dbc) {
 
     return ret;
 }
-
-void odbc_show_error(SQLSMALLINT handleType, SQLHANDLE handle) {
-    SQLINTEGER i = 0, native;
-    SQLCHAR state[7], text[256];
-    SQLSMALLINT len;
-    SQLRETURN ret;
-
-    fprintf(stderr, "\nODBC diagnostics:\n");
-
-    do {
-        ret = SQLGetDiagRec(handleType, handle, ++i, state, &native, text, sizeof(text), &len);
-        if (SQL_SUCCEEDED(ret)) {
-            fprintf(stderr, "%s:%d:%d:%s\n", state, i, native, text);
-        }
-    } while (ret == SQL_SUCCESS);
-}
-

@@ -19,7 +19,4 @@ int odbc_connect(SQLHENV* env, SQLHDBC* dbc);
 /* STANDARD DISCONNECTION PROCEDURE */
 int odbc_disconnect(SQLHENV env, SQLHDBC dbc);
 
-/* Show ODBC errors from a handle */
-void odbc_show_error(SQLSMALLINT handleType, SQLHANDLE handle);
-
 #endif
