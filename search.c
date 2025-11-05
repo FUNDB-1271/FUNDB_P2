@@ -24,8 +24,12 @@ void    results_search(char * from, char *to, char *date,
   SQLHDBC dbc;
   SQLHSTMT stmt;
   SQLRETURN ret;
-  SQLLEN row_ind;
-
+  SQLINTEGER flight_id;
+  SQLINTEGER number_of_seats;
+  SQLINTEGER connection_flights;
+  SQLCHAR departure_date[256];
+  SQLCHAR arrival_date[256];
+  SQLCHAR time_elapsed[256];
   char buf[512];
   FILE *f = NULL;
   int row = 0;
@@ -95,16 +99,16 @@ void    results_search(char * from, char *to, char *date,
 "       UNION\n"
 "       SELECT *\n"
 "       FROM   indirect_flights )\n"
-"SELECT concat_ws(E'\t',\n"
-"                 flight_id::text,\n"
-"                 n_seats::text,\n"
-"                 connection_flights::text,\n"
-"                 scheduled_departure::text,\n"
-"                 scheduled_arrival::text,\n"
-"                 time_elapsed::text) AS row_text\n"
+"SELECT   flight_id,\n"
+"         n_seats,\n"
+"         connection_flights,\n"
+"         scheduled_departure::date,\n"
+"         scheduled_arrival::date,\n"
+"         time_elapsed\n"
 "FROM     total_flights\n"
 "WHERE    n_seats != 0\n"
-"ORDER BY time_elapsed;";
+"ORDER BY time_elapsed, scheduled_departure;";
+
 
   if (!(f = fopen("salida.txt", "w"))) return;
 
@@ -117,10 +121,14 @@ void    results_search(char * from, char *to, char *date,
 
   ret = SQLPrepare(stmt, (SQLCHAR *) query, SQL_NTS);
 
+  fprintf(f, "%s", query);
+  fprintf(f, "\n\n---\n---\n---\n\n");
+
 
   if (!(SQL_SUCCEEDED(ret))) {
-    fprintf(stderr, "Error preparando statement\n"); 
+    fprintf(f, "Error preparando statement\n"); 
     exit_safely(stmt);
+    fclose(f);
     return;
   }
 
@@ -140,43 +148,24 @@ void    results_search(char * from, char *to, char *date,
       return;
   }
 
-  /*
-  ret = SQLBindCol(stmt, 1, SQL_C_LONG, flight_id, sizeof(flight_id), NULL);
-  ret = SQLBindCol(stmt, 2, SQL_C_LONG, number_of_seats, sizeof(number_of_seats), NULL);
-  ret = SQLBindCol(stmt, 3, SQL_C_LONG, connection_flights, sizeof(connection_flights), NULL);
+  ret = SQLBindCol(stmt, 1, SQL_C_LONG, &flight_id, sizeof(flight_id), NULL);
+  ret = SQLBindCol(stmt, 2, SQL_C_LONG, &number_of_seats, sizeof(number_of_seats), NULL);
+  ret = SQLBindCol(stmt, 3, SQL_C_LONG, &connection_flights, sizeof(connection_flights), NULL);
   ret = SQLBindCol(stmt, 4, SQL_C_CHAR, departure_date, sizeof(departure_date), NULL);
   ret = SQLBindCol(stmt, 5, SQL_C_CHAR, arrival_date, sizeof(arrival_date), NULL);
   ret = SQLBindCol(stmt, 6, SQL_C_CHAR, time_elapsed, sizeof(time_elapsed), NULL);      
 
   while (SQL_SUCCEEDED(SQLFetch(stmt)) && row < max_rows) {
-    sprintf(buf, "%s\t%s\t%s\t%s\t%s\t%s\t\n", flight_id, number_of_seats, connection_flights, departure_date, arrival_date, time_elapsed);
+    sprintf(buf, "%d\t%d\t%d\t%s\t%s\t%s\t\n", flight_id, number_of_seats, connection_flights, departure_date, arrival_date, time_elapsed);
     fprintf(f, "%d, %s", row, buf);
 
-    strncpy((*choices)[row], buf, max_length - 1);
+    t = strlen(buf)+1;
+    t = MIN(t, max_length);
+
+    /* copy up to max_length-1 characters, ensure NUL termination */
+    strncpy((*choices)[row], (char*)buf, max_length - 1);
     (*choices)[row][max_length - 1] = '\0';
     row++;
-  }
-*/
-
-
-  /* after SQLExecute(stmt) */
-  ret = SQLBindCol(stmt, 1, SQL_C_CHAR, buf, sizeof(buf), &row_ind);
-  if (!SQL_SUCCEEDED(ret)) { 
-    odbc_show_error(f, SQL_HANDLE_STMT, stmt); 
-    /*cleanup*/ 
-  }
-
-  while (row < max_rows && SQL_SUCCEEDED(ret = SQLFetch(stmt))) {
-      if (row_ind == SQL_NULL_DATA) {
-          buf[0] = '\0';
-      }
-      t = strlen(buf)+1;
-      t = MIN(t, max_length);
-
-      /* copy up to max_length-1 characters, ensure NUL termination */
-      strncpy((*choices)[row], (char*)buf, max_length - 1);
-      (*choices)[row][max_length - 1] = '\0';
-      row++;
   }
 
   *n_choices = row;
