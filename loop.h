@@ -9,6 +9,7 @@
 #include "search.h"
 #include "lbpass.h"
 
+
 /* menu options */
 #define SEARCH 0
 #define BPASS 1

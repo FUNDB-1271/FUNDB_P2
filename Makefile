@@ -28,7 +28,7 @@ PG_RESTORE = pg_restore
 
 ########################################################################################
 
-all: $(EXE) main
+all: $(EXE) 
 
 
 %.o: %.c $(HEADERS)
@@ -62,14 +62,6 @@ shell:
 	@$(PSQL)  
 
 ########################################################################################
-
-main.o: main.c search.h windows.h odbc.h
-	$(CC) $(CFLAGS) $(INCLUDE) -c -o $@ $< 
-
-
-main: main.o windows.o odbc.o
-	$(CC) -o main $^ $(LDLIBS)
-
 clean :
 	rm -f *.o core main.o $(EXE) main
 
