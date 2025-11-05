@@ -63,9 +63,7 @@ shell:
 
 ########################################################################################
 
-main.o: main.c search.h windows.h odbc.h /opt/homebrew/include/sql.h \
-  /opt/homebrew/include/sqltypes.h /opt/homebrew/include/unixodbc.h \
-  /opt/homebrew/include/sqlext.h /opt/homebrew/include/sqlucode.h
+main.o: main.c search.h windows.h odbc.h
 	$(CC) $(CFLAGS) $(INCLUDE) -c -o $@ $< 
 
 
