@@ -6,12 +6,14 @@
 ########################################################################################
 
 CC = gcc -g
-CFLAGS = -Wall -Wextra -pedantic -ansi
-LDLIBS = -lodbc -lcurses -lpanel -lmenu -lform
+CFLAGS ?= -Wall -Wextra -pedantic -ansi
+LDLIBS ?= -lodbc -lcurses -lpanel -lmenu -lform
 EXE = menu
-OBJ = $(EXE).o bpass.o loop.o  search.o windows.o odbc.o
+OBJ = $(EXE).o bpass.o loop.o search.o windows.o odbc.o
 
 ########################################################################################
+
+-include local.mk
 
 export PGDATABASE:=flight
 export PGUSER :=alumnodb

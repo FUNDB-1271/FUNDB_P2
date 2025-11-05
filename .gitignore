@@ -7,3 +7,4 @@ odbc_tutorial/
 menu
 .vscode/
 main
+local.mk
