@@ -1,0 +1,80 @@
+WITH vacancies AS
+(
+          SELECT    ts.flight_id,
+                    ts.n_seats - COALESCE(os.n_seats, 0) AS n_seats
+          FROM      (
+                             SELECT   flight_id,
+                                      Count(*) AS n_seats
+                             FROM     flights f 
+                             NATURAL JOIN     seats s
+                             GROUP BY flight_id) ts
+          LEFT JOIN
+                    (
+                             SELECT   flight_id,
+                                      Count(*) AS n_seats
+                             FROM     boarding_passes 
+                             NATURAL JOIN     flights
+                             GROUP BY flight_id) os
+          ON        os.flight_id = ts.flight_id ), direct_flights AS
+(
+         SELECT   f.flight_id,
+                  v.n_seats,
+                  0 AS connection_flights,
+                  departure_airport,
+                  NULL AS connection_airport,
+                  arrival_airport,
+                  scheduled_departure::                      date,
+                  scheduled_arrival::                        date,
+                  scheduled_arrival - scheduled_departure AS time_elapsed
+         FROM     flights f
+         JOIN     vacancies v
+         ON       v.flight_id = f.flight_id
+         WHERE    departure_airport = ?
+         AND      arrival_airport = ?
+         AND      scheduled_arrival - scheduled_departure <= interval '1 day'
+         AND      scheduled_departure::date = ?
+         ORDER BY time_elapsed ), indirect_flights AS
+(
+         SELECT   f1.flight_id,
+                  Least(v1.n_seats, v2.n_seats) AS n_seats,
+                  1                             AS connection_flights,
+                  f1.departure_airport,
+                  f1.arrival_airport AS connection_airport,
+                  f2.arrival_airport,
+                  f1.scheduled_departure::                         date,
+                  f2.scheduled_arrival::                           date,
+                  f2.scheduled_arrival - f1.scheduled_departure AS time_elapsed
+         FROM     flights f1
+         JOIN     flights f2
+         ON       f1.arrival_airport = f2.departure_airport
+         JOIN     vacancies v1
+         ON       f1.flight_id = v1.flight_id
+         JOIN     vacancies v2
+         ON       f2.flight_id = v2.flight_id
+         WHERE    f1.departure_airport = ?
+         AND      f2.arrival_airport = ?
+         AND      f2.scheduled_departure >= f1.scheduled_arrival
+         AND      f2.scheduled_arrival - f1.scheduled_departure <= interval '1 day'
+         AND      f1.scheduled_departure::date = ?
+         ORDER BY time_elapsed ), total_flights AS
+(
+       SELECT *
+       FROM   direct_flights
+       UNION
+       SELECT *
+       FROM   indirect_flights )
+SELECT   flight_id AS "Flight",
+         n_seats AS "Seat",
+         connection_flights AS "Connections",
+         scheduled_departure::date AS "Departure",
+         scheduled_arrival::date AS "Arrival",
+         time_elapsed AS "Duration"
+FROM     total_flights
+WHERE    n_seats != 0
+ORDER BY time_elapsed, scheduled_departure;
+
+---
+---
+---
+
+1, 1185     116      0            2017-09-10      2017-09-10      05:05:00  

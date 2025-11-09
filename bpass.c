@@ -20,6 +20,8 @@ int results_bpass(char * book_ref, int * n_choices, char *** choices, int max_le
     int row = 0;
     char buf[512];
     int t = 0;
+    SQLSMALLINT num_cols;
+    char header[256] = "";
 
     /* Conectarse */
     ret = odbc_connect(&env, &dbc);
@@ -30,39 +32,41 @@ int results_bpass(char * book_ref, int * n_choices, char *** choices, int max_le
 
     /* Query con CTEs */
     const char *query =
-        "WITH tickets_to_assign AS ("
-        "    SELECT t.ticket_no, tf.flight_id, f.scheduled_departure, f.aircraft_code, t.passenger_name "
-        "    FROM tickets t "
-        "    JOIN ticket_flights tf ON t.ticket_no = tf.ticket_no "
-        "    LEFT JOIN boarding_passes bp ON tf.ticket_no = bp.ticket_no AND tf.flight_id = bp.flight_id "
-        "    JOIN flights f ON tf.flight_id = f.flight_id "
-        "    WHERE t.book_ref = ? AND bp.boarding_no IS NULL "
-        "    ORDER BY t.ticket_no ASC"
-        "), "
-        "available_seats AS ("
-        "    SELECT s.seat_no, f.flight_id "
-        "    FROM seats s "
-        "    JOIN aircrafts_data ad ON s.aircraft_code = ad.aircraft_code "
-        "    JOIN flights f ON f.aircraft_code = ad.aircraft_code "
-        "    JOIN ticket_flights tf ON tf.flight_id = f.flight_id "
-        "    JOIN tickets t ON tf.ticket_no = t.ticket_no "
-        "    LEFT JOIN boarding_passes bp ON bp.ticket_no = tf.ticket_no AND bp.flight_id = tf.flight_id "
-        "    WHERE t.book_ref = ? AND bp.boarding_no IS NULL "
-        "    ORDER BY s.aircraft_code, s.seat_no"
-        "), "
-        "assigned_seats AS ("
-        "    SELECT t.ticket_no, t.flight_id, a.seat_no, "
-        "           ROW_NUMBER() OVER (ORDER BY t.ticket_no, a.seat_no) AS boarding_no "
-        "    FROM tickets_to_assign t "
-        "    JOIN LATERAL ("
-        "        SELECT seat_no FROM available_seats a WHERE a.flight_id = t.flight_id LIMIT 1"
-        "    ) a ON TRUE"
-        ") "
-        "INSERT INTO boarding_passes (ticket_no, flight_id, boarding_no, seat_no) "
-        "SELECT ticket_no, flight_id, boarding_no, seat_no FROM assigned_seats "
-        "RETURNING ticket_no, flight_id, boarding_no, seat_no;";
-
-
+    "WITH tickets_to_assign AS ("
+    "    SELECT t.ticket_no, tf.flight_id, f.scheduled_departure, f.aircraft_code, t.passenger_name "
+    "    FROM tickets t "
+    "    JOIN ticket_flights tf ON t.ticket_no = tf.ticket_no "
+    "    LEFT JOIN boarding_passes bp ON tf.ticket_no = bp.ticket_no AND tf.flight_id = bp.flight_id "
+    "    JOIN flights f ON tf.flight_id = f.flight_id "
+    "    WHERE t.book_ref = ? AND bp.boarding_no IS NULL "
+    "    ORDER BY t.ticket_no ASC"
+    "), "
+    "available_seats AS ("
+    "    SELECT s.seat_no, f.flight_id "
+    "    FROM seats s "
+    "    JOIN aircrafts_data ad ON s.aircraft_code = ad.aircraft_code "
+    "    JOIN flights f ON f.aircraft_code = ad.aircraft_code "
+    "    JOIN ticket_flights tf ON tf.flight_id = f.flight_id "
+    "    JOIN tickets t ON tf.ticket_no = t.ticket_no "
+    "    LEFT JOIN boarding_passes bp ON bp.ticket_no = tf.ticket_no AND bp.flight_id = tf.flight_id "
+    "    WHERE t.book_ref = ? AND bp.boarding_no IS NULL "
+    "    ORDER BY s.aircraft_code, s.seat_no"
+    "), "
+    "assigned_seats AS ("
+    "    SELECT t.ticket_no, t.flight_id, a.seat_no, "
+    "           ROW_NUMBER() OVER (ORDER BY t.ticket_no, a.seat_no) AS boarding_no "
+    "    FROM tickets_to_assign t "
+    "    JOIN LATERAL ("
+    "        SELECT seat_no FROM available_seats a WHERE a.flight_id = t.flight_id LIMIT 1"
+    "    ) a ON TRUE"
+    ") "
+    "INSERT INTO boarding_passes (ticket_no, flight_id, boarding_no, seat_no) "
+    "SELECT ticket_no, flight_id, boarding_no, seat_no FROM assigned_seats "
+    "RETURNING "
+    "    ticket_no,"
+    "    flight_id,"
+    "    boarding_no,"
+    "    seat_no;";
     
     /* Crear un manejador de sentencia */
     SQLAllocHandle(SQL_HANDLE_STMT, dbc, &stmt);
@@ -88,11 +92,23 @@ int results_bpass(char * book_ref, int * n_choices, char *** choices, int max_le
     SQLBindCol(stmt, 3, SQL_C_SLONG, &boarding_no, 0, NULL);
     SQLBindCol(stmt, 4, SQL_C_CHAR, seat_no, sizeof(seat_no), NULL);
 
+    SQLNumResultCols(stmt, &num_cols);
+
+    /* Crear encabezado dentro de choices */
+
+    sprintf(header, "%-15s %-12s %-15s %-10s\n",
+        "Ticket_Number", "Flight", "Boarding_No", "Seat");
+
+    /* Guardar el encabezado como primera fila del menú */
+    strncpy((*choices)[row], header, max_length - 1);
+    (*choices)[row][max_length - 1] = '\0';
+    row++;
+
 
     /* Leer y mostrar resultados */
     while (SQL_SUCCEEDED(ret = SQLFetch(stmt)) && row < max_rows) {
-        sprintf(buf, "%s\t%s\t%d\t%s\n",
-               ticket_no, flight_id, boarding_no, seat_no);
+        sprintf(buf, "%-15s %-12s %-15d %-10s\n",
+           ticket_no, flight_id, boarding_no, seat_no);
         
         t = strlen(buf)+1;
         t = MIN(t, max_length);

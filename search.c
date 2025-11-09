@@ -34,6 +34,12 @@ void    results_search(char * from, char *to, char *date,
   FILE *f = NULL;
   int row = 0;
   int t = 0;
+  int i;
+  SQLSMALLINT num_cols;
+  char header[256] = "";
+  SQLCHAR col_name[128];
+  SQLSMALLINT name_len, data_type, decimal_digits, nullable;
+  SQLULEN col_size;
   const char *query = "WITH vacancies AS\n"
 "(\n"
 "          SELECT    ts.flight_id,\n"
@@ -99,12 +105,12 @@ void    results_search(char * from, char *to, char *date,
 "       UNION\n"
 "       SELECT *\n"
 "       FROM   indirect_flights )\n"
-"SELECT   flight_id,\n"
-"         n_seats,\n"
-"         connection_flights,\n"
-"         scheduled_departure::date,\n"
-"         scheduled_arrival::date,\n"
-"         time_elapsed\n"
+"SELECT   flight_id AS \"Flight\",\n"
+"         n_seats AS \"Seat\",\n"
+"         connection_flights AS \"Connections\",\n"
+"         scheduled_departure::date AS \"Departure\",\n"
+"         scheduled_arrival::date AS \"Arrival\",\n"
+"         time_elapsed AS \"Duration\"\n"
 "FROM     total_flights\n"
 "WHERE    n_seats != 0\n"
 "ORDER BY time_elapsed, scheduled_departure;";
@@ -155,8 +161,24 @@ void    results_search(char * from, char *to, char *date,
   ret = SQLBindCol(stmt, 5, SQL_C_CHAR, arrival_date, sizeof(arrival_date), NULL);
   ret = SQLBindCol(stmt, 6, SQL_C_CHAR, time_elapsed, sizeof(time_elapsed), NULL);      
 
+  SQLNumResultCols(stmt, &num_cols);
+
+  sprintf(header, "%-8s %-8s %-12s %-15s %-15s %-10s\n",
+    "Flight", "Seat", "Connections", "Departure", "Arrival", "Duration");
+
+  /* Guardar el encabezado como primera fila del menú */
+  strncpy((*choices)[row], header, max_length - 1);
+  (*choices)[row][max_length - 1] = '\0';
+  row++;
+
   while (SQL_SUCCEEDED(SQLFetch(stmt)) && row < max_rows) {
-    sprintf(buf, "%d\t%d\t%d\t%s\t%s\t%s\t\n", flight_id, number_of_seats, connection_flights, departure_date, arrival_date, time_elapsed);
+    sprintf(buf, "%-8d %-8d %-12d %-15s %-15s %-10s\n",
+      flight_id,
+      number_of_seats,
+      connection_flights,
+      departure_date,
+      arrival_date,
+      time_elapsed);
     fprintf(f, "%d, %s", row, buf);
 
     t = strlen(buf)+1;
