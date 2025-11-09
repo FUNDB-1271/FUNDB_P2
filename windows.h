@@ -13,6 +13,7 @@
 #define DEBUG 1
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
+#define MAX_RESULTS 1024
 
 typedef struct _Windows {
     WINDOW *menu_win,
@@ -69,11 +70,13 @@ void print_menu(WINDOW *menu_win,
                 int highlight,
                 char * title);
 void print_out(WINDOW *win,
-                char ** choices,
-                int menuitems,
-                int highlight,
-                char * title);
-
+               char **choices,
+               int menuitems,
+               int starting_index,
+               int screen_rows, 
+               int highlight,
+               char *title);
+               
 void write_msg(WINDOW * win, char * msg, int y, int x, char * title);
 
 #endif /* NCOURSES_WINDOWS_H */
