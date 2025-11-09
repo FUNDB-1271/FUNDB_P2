@@ -67,7 +67,8 @@ void    results_search(char * from, char *to, char *date,
 "                  arrival_airport,\n"
 "                  scheduled_departure::                      date,\n"
 "                  scheduled_arrival::                        date,\n"
-"                  scheduled_arrival - scheduled_departure AS time_elapsed\n"
+"                  scheduled_arrival - scheduled_departure AS time_elapsed,\n"
+"                  f.aircraft_code\n"
 "         FROM     flights f\n"
 "         JOIN     vacancies v\n"
 "         ON       v.flight_id = f.flight_id\n"
@@ -85,7 +86,8 @@ void    results_search(char * from, char *to, char *date,
 "                  f2.arrival_airport,\n"
 "                  f1.scheduled_departure::                         date,\n"
 "                  f2.scheduled_arrival::                           date,\n"
-"                  f2.scheduled_arrival - f1.scheduled_departure AS time_elapsed\n"
+"                  f2.scheduled_arrival - f1.scheduled_departure AS time_elapsed,\n"
+"                  f2.aircraft_code\n"
 "         FROM     flights f1\n"
 "         JOIN     flights f2\n"
 "         ON       f1.arrival_airport = f2.departure_airport\n"
@@ -110,7 +112,8 @@ void    results_search(char * from, char *to, char *date,
 "         connection_flights AS \"Connections\",\n"
 "         scheduled_departure::date AS \"Departure\",\n"
 "         scheduled_arrival::date AS \"Arrival\",\n"
-"         time_elapsed AS \"Duration\"\n"
+"         time_elapsed AS \"Duration\",\n"
+"         aircraft_code AS \"Aircraft\"\n"
 "FROM     total_flights\n"
 "WHERE    n_seats != 0\n"
 "ORDER BY time_elapsed, scheduled_departure;";
@@ -163,7 +166,7 @@ void    results_search(char * from, char *to, char *date,
 
   SQLNumResultCols(stmt, &num_cols);
 
-  sprintf(header, "%-8s %-8s %-12s %-15s %-15s %-10s\n",
+  sprintf(header, "%-15s %-15s %-15s %-15s %-15s %-15s\n",
     "Flight", "Seat", "Connections", "Departure", "Arrival", "Duration");
 
   /* Guardar el encabezado como primera fila del menú */
@@ -172,7 +175,7 @@ void    results_search(char * from, char *to, char *date,
   row++;
 
   while (SQL_SUCCEEDED(SQLFetch(stmt)) && row < max_rows) {
-    sprintf(buf, "%-8d %-8d %-12d %-15s %-15s %-10s\n",
+    sprintf(buf, "%-15d %-15d %-15d %-15s %-15s %-15s\n",
       flight_id,
       number_of_seats,
       connection_flights,

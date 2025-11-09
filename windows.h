@@ -77,6 +77,6 @@ void print_out(WINDOW *win,
                int highlight,
                char *title);
                
-void write_msg(WINDOW * win, char * msg, int y, int x, char * title);
+void write_msg(WINDOW * win, char * msg, int y, int x, char * title, int clear);
 
 #endif /* NCOURSES_WINDOWS_H */

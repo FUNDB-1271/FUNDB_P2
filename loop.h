@@ -8,6 +8,7 @@
 #include "windows.h"
 #include "search.h"
 #include "lbpass.h"
+#include <stdio.h>
 
 
 /* menu options */

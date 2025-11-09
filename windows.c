@@ -177,7 +177,7 @@ static void create_msg(_Windows *windows)
 }
 
 
-void write_msg(WINDOW *win, char *msg, int y, int x, char *title)
+void write_msg(WINDOW *win, char *msg, int y, int x, char *title, int clear)
 /** write string msg in  window win, at position (y,x)
 *
  * @param win window
@@ -190,10 +190,11 @@ void write_msg(WINDOW *win, char *msg, int y, int x, char *title)
         x = 2;
     if (y < 0)
         y = 2;
-    (void) wclear(win);
-    /* since we cleared the box we need to repaint it */
-    (void) box(win, 0, 0);
-    (void) mvwaddstr(win, 0, 2, title);
+    if (clear) {
+        wclear(win);
+        box(win, 0, 0);
+        mvwaddstr(win, 0, 2, title);
+    }
     /* write message */
     (void) mvwaddstr(win, y, x, msg);
     (void) wrefresh(win);
