@@ -157,9 +157,9 @@ static void create_out(_Windows *windows, _Menus *menu)
                                      windows->out_title);
 
     menu->out_win_choices =
-            (char **) calloc(windows->rows_out_win, sizeof(char *));
+            (char **) calloc(MAX_RESULTS, sizeof(char *));
 
-    for (i = 0; i < windows->rows_out_win; i++)
+    for (i = 0; i < MAX_RESULTS; i++)
         (menu->out_win_choices)[i] =
                 (char *) calloc(windows->cols_out_win, sizeof(char *));
 }
@@ -276,23 +276,33 @@ void _initsrc(_Windows *windows,
 void print_out(WINDOW *win,
                char **choices,
                int menuitems,
+               int starting_index,
+               int screen_rows, 
                int highlight,
                char *title)
 /** print array of strings choices window win (usually out_win)
  *
  * @param win
  * @param choices list of fields
+ * @param starting_index first row to print's index
+ * @param screen_rows max number of rows to print in each page
  * @param menuitems number of fields (maximum number of rows)
  * @param highlight highlight this row (0 -> first row)
  * @param title
  */
 {
     int x=0, y=0, i=0;
+    int end = starting_index + screen_rows;
     x = 2;
     y = 1;
+    if (end > menuitems) end = menuitems;
+
+
+
     (void) box(win, 0, 0);
     (void) mvwaddstr(win, 0, 2, title);
-    for (i = 0; i < menuitems; ++i) {
+    
+    for (i = starting_index; i < end; ++i, y++) {
         if (highlight == i) /* High light the present choice  */
         {
             (void) wattron(win, A_REVERSE);  /** set reverse attribute on */
@@ -300,8 +310,14 @@ void print_out(WINDOW *win,
             (void) wattroff(win, A_REVERSE); /** set reverse attribute off */
         } else
             (void) mvwprintw(win, y, x, "%s", choices[i]);
-        y += 1;
     }
+
+    /* limpiar líneas que no se van a rellenar en la nueva página */
+    for (i = end; i < starting_index + screen_rows; ++i, y++) {
+        wmove(win, y, x);
+        wclrtoeol(win);
+    }
+
     (void) wrefresh(win);
 }
 

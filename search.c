@@ -155,8 +155,8 @@ void    results_search(char * from, char *to, char *date,
   ret = SQLBindCol(stmt, 5, SQL_C_CHAR, arrival_date, sizeof(arrival_date), NULL);
   ret = SQLBindCol(stmt, 6, SQL_C_CHAR, time_elapsed, sizeof(time_elapsed), NULL);      
 
-  while (SQL_SUCCEEDED(SQLFetch(stmt)) && row < max_rows) {
-    sprintf(buf, "%d\t%d\t%d\t%s\t%s\t%s\t\n", flight_id, number_of_seats, connection_flights, departure_date, arrival_date, time_elapsed);
+  while (SQL_SUCCEEDED(SQLFetch(stmt)) && row < MAX_RESULTS) {
+    sprintf(buf, "%4d\t%d\t%d\t%s\t%s\t%s\t\n", flight_id, number_of_seats, connection_flights, departure_date, arrival_date, time_elapsed);
     fprintf(f, "%d, %s", row, buf);
 
     t = strlen(buf)+1;

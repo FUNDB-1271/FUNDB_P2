@@ -22,6 +22,7 @@
  +-------------------------------+
 */
 #include "loop.h"
+#include "windows.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -66,6 +67,8 @@ void loop(_Windows *windows, _Menus *menus,
     int n_out_choices=0; /* number of printed lines in win_out window */
     int out_highlight = 0; /* line highlighted in win_out window */
     int rows_out_window = 0; /* size of win_out window */
+    int starting_row_index = 0;
+    int screen_rows = 0;
     int i = 0; /* dummy variable for loops */
 
     (void) curs_set(1); /* show cursor */
@@ -73,7 +76,9 @@ void loop(_Windows *windows, _Menus *menus,
     menu_win = windows->menu_win;
     out_win = windows->out_win;
     msg_win = windows->msg_win;
-    rows_out_window = windows->terminal_nrows - 2 * windows->height_menu_win - 1;
+    rows_out_window = windows->rows_out_win;
+    screen_rows = rows_out_window - 2; /* subtract title/top and bottom border */
+    if (screen_rows < 1) screen_rows = 1;
 
     while ((bool) TRUE) {
         ch = getch(); /* get char typed by user */
@@ -105,7 +110,31 @@ void loop(_Windows *windows, _Menus *menus,
                 (void) update_panels();
                 (void) doupdate();
                 break;
-            case KEY_RIGHT:
+            case KEY_NPAGE: /* Page Down */
+                if (focus == FOCUS_RIGHT && n_out_choices > 0) {
+                    /* jump the selection down by a page */
+                    out_highlight = MIN(out_highlight + screen_rows, n_out_choices - 1);
+
+                    /* compute the page that contains the new highlight */
+                    starting_row_index = (out_highlight / screen_rows) * screen_rows;
+
+                    print_out(out_win, menus->out_win_choices, n_out_choices,
+                              starting_row_index, screen_rows, out_highlight, windows->out_title);
+                }
+                break;
+
+            case KEY_PPAGE: /* Page Up */
+                if (focus == FOCUS_RIGHT && n_out_choices > 0) {
+                    /* jump the selection up by a page */
+                    out_highlight = MAX(out_highlight - screen_rows, 0);
+
+                    /* compute the page that contains the new highlight */
+                    starting_row_index = (out_highlight / screen_rows) * screen_rows;
+
+                    print_out(out_win, menus->out_win_choices, n_out_choices,
+                              starting_row_index, screen_rows, out_highlight, windows->out_title);
+                }
+                break;            case KEY_RIGHT:
             case 0x3E: /* > */
                 focus = FOCUS_LEFT;
                 (void) menu_driver(menu, REQ_RIGHT_ITEM);
@@ -131,7 +160,7 @@ void loop(_Windows *windows, _Menus *menus,
                     (void) wrefresh(windows->form_bpass_win);
                 }  else if (focus == FOCUS_RIGHT){
                     out_highlight = MAX(out_highlight - 1, 0);
-                    print_out(out_win, menus->out_win_choices, n_out_choices,
+                    print_out(out_win, menus->out_win_choices, n_out_choices, starting_row_index, screen_rows,
                               out_highlight, windows->out_title);
                 }
                 break;
@@ -146,8 +175,8 @@ void loop(_Windows *windows, _Menus *menus,
                     (void) form_driver(forms->bpass_form, REQ_END_LINE);
                     (void) wrefresh(windows->form_bpass_win);
                 } else if (focus == FOCUS_RIGHT){
-                    out_highlight = MIN(out_highlight + 1, n_out_choices-1);
-                    print_out(out_win, menus->out_win_choices, n_out_choices,
+                    out_highlight = MIN(out_highlight + 1, n_out_choices - 1);
+                    print_out(out_win, menus->out_win_choices, n_out_choices, starting_row_index, screen_rows,
                               out_highlight, windows->out_title);
                 }
                 break; 
@@ -206,6 +235,7 @@ void loop(_Windows *windows, _Menus *menus,
                 break; /* quit */
             else if ((choice == SEARCH) && (focus == FOCUS_LEFT)) {
                 out_highlight = 0;
+                starting_row_index = 0;
                 for(i=0; i< rows_out_window ; i++)
                     (menus->out_win_choices)[i][0] = '\0';
                 (void)wclear(out_win);
@@ -215,7 +245,7 @@ void loop(_Windows *windows, _Menus *menus,
                 tmpStr3 = field_buffer((forms->search_form_items)[5], 0);
                 results_search(tmpStr1, tmpStr2, tmpStr3, &n_out_choices, & (menus->out_win_choices),
                                windows->cols_out_win-4, windows->rows_out_win-2);
-                print_out(out_win, menus->out_win_choices, n_out_choices,
+                print_out(out_win, menus->out_win_choices, n_out_choices, starting_row_index, screen_rows, 
                           out_highlight, windows->out_title);
                 if ((bool)DEBUG) {
                     (void)snprintf(buffer, 128, "arg1=%s, arg2=%s, arg3=%s",  tmpStr1, tmpStr2, tmpStr3);
@@ -230,6 +260,7 @@ void loop(_Windows *windows, _Menus *menus,
             }
             else if ((choice == BPASS) && (focus == FOCUS_LEFT)) {
                 out_highlight = 0;
+                starting_row_index = 0;
                 for(i=0; i< rows_out_window ; i++)
                     (menus->out_win_choices)[i][0] = '\0';
                 (void) wclear(out_win);
@@ -237,7 +268,7 @@ void loop(_Windows *windows, _Menus *menus,
                 tmpStr1 = field_buffer((forms->bpass_form_items)[1], 0);
                 results_bpass(tmpStr1, &n_out_choices, & (menus->out_win_choices),
                               windows->cols_out_win-4, windows->rows_out_win-2);
-                print_out(out_win, menus->out_win_choices, n_out_choices,
+                print_out(out_win, menus->out_win_choices, n_out_choices, starting_row_index, screen_rows, 
                           out_highlight, windows->out_title);
             }
             else if ((choice == BPASS) && focus == (FOCUS_RIGHT)) {
