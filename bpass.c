@@ -106,7 +106,7 @@ int results_bpass(char * book_ref, int * n_choices, char *** choices, int max_le
 
 
     /* Leer y mostrar resultados */
-    while (SQL_SUCCEEDED(ret = SQLFetch(stmt)) && row < max_rows) {
+    while (SQL_SUCCEEDED(ret = SQLFetch(stmt)) && row < MAX_RESULTS) { /* importante que el tope del bucle sea MAX_RESULTS para guardar más de una página */
         sprintf(buf, "%-15s %-12s %-15d %-10s\n",
            ticket_no, flight_id, boarding_no, seat_no);
         

@@ -172,7 +172,7 @@ void    results_search(char * from, char *to, char *date,
   (*choices)[row][max_length - 1] = '\0';
   row++;
 
-  while (SQL_SUCCEEDED(SQLFetch(stmt)) && row < max_rows) {
+  while (SQL_SUCCEEDED(SQLFetch(stmt)) && row < MAX_RESULTS) { /* importante que el tope del bucle sea MAX_RESULTS para guardar más de una página */
     sprintf(buf, "%-15d %-15d %-15d %-15s %-15s %-15s %-15s\n",
       flight_id,
       number_of_seats,
