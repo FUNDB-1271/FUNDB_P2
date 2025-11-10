@@ -7,7 +7,7 @@ void exit_safely(SQLHSTMT *stmt);
 
 void    results_search(char * from, char *to, char *date,
                        int * n_choices, char *** choices,
-                       int max_length,
+                       char *** choices_extra, int max_length,
                        int max_rows)
    /**here you need to do your query and fill the choices array of strings
  *
@@ -33,9 +33,9 @@ void    results_search(char * from, char *to, char *date,
   SQLCHAR time_elapsed[256];
   SQLLEN len1, len2, len3, len4, len5, len6, len7, len8, len9, len10, len11;
   FILE *f = NULL;
-  char buf[512];
+  char buf1[512], buf2[512];
   int row = 0;
-  int t = 0;
+  int t2 = 0, t1 = 0;
   SQLSMALLINT num_cols;
   char header[256] = "";
   const char *query = "WITH vacancies AS\n"
@@ -308,12 +308,16 @@ void    results_search(char * from, char *to, char *date,
     return;
   }
 
-  sprintf(header, "%-15s %-15s %-15s %-15s %-20s %-20s %-20s %-20s %-15s %-10s %-10s\n",
-    "Flight", "Flight 2", "Seat", "Connections", "Departure", "Arrival", "Departure2", "Arrival2", "Duration", "Aircraft1", "Aircraft2");
+/**********************************************                 READ QUERY RESULTS                        **************************************************+*/
+
+  sprintf(header, "%-15s %-15s %-15s %-20s %-20s %-15s\n",
+    "Flight", "Seat", "Connections", "Departure", "Arrival", "Duration");
 
   /* Guardar el encabezado como primera fila del menú */
-  strncpy((*choices)[row], header, max_length - 1);
-  (*choices)[row][max_length - 1] = '\0';
+  strncpy((*choices)[row], header, strlen(header) + 1);
+  (*choices)[row][strlen(header)] = '\0';
+  strncpy((*choices_extra)[row], "", strlen("") + 1);
+  (*choices_extra)[row][strlen("")] = '\0';
   row++;
 
   /* importante que el tope del bucle sea MAX_RESULTS para guardar más de una página */
@@ -331,25 +335,31 @@ void    results_search(char * from, char *to, char *date,
     if (len11 == SQL_NULL_DATA) flight_id2 = -1;    
 
     
-    sprintf(buf, "%-15d %-15d %-15d %-15d %-20s %-20s %-15s %-20s %-20s %-10s %-10s\n",
+    sprintf(buf1, "%-15d %-15d %-15d %-20s %-20s %-15s\n",
       flight_id,
-      flight_id2,
       number_of_seats,
       connection_flights,
       f1_departure_date,
       f2_arrival_date,
-      time_elapsed,
-      f1_arrival_date,
-      f2_departure_date,
-      f1_aircraft_code,
-      f2_aircraft_code);
+      time_elapsed);
 
-    t = strlen(buf)+1;
-    t = MIN(t, MAX_TUPLE_LENGTH);
+    if (flight_id2 == -1) {
+      sprintf(buf2, "%-7d %-20s %-20s %-15s", flight_id, f1_departure_date, f1_arrival_date, f1_aircraft_code);
+    } else {
+      sprintf(buf2, "%-7d %-7d %-20s %-20s %-20s %-20s %-10s %-10s", flight_id, flight_id2, f1_departure_date, f1_arrival_date, f2_departure_date, f2_arrival_date, f1_aircraft_code, f2_aircraft_code);
+    }
+
+    t1 = strlen(buf1)+1;
+    t1 = MIN(t1, MAX_TUPLE_LENGTH);
+
+    t2 = strlen(buf2)+1;
+    t2 = MIN(t2, MAX_MESSAGE_LENGTH);
 
     /* copy up to max_length-1 characters, ensure NUL termination */
-    strncpy((*choices)[row], (char*)buf, t);
-    (*choices)[row][t - 1] = '\0';
+    strncpy((*choices)[row], (char*)buf1, t1);
+    (*choices)[row][t1 - 1] = '\0';
+    strncpy((*choices_extra)[row], (char*)buf2, t2);
+    (*choices_extra)[row][t2 - 1] = '\0';
     row++;
   }
 

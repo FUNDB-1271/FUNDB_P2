@@ -15,6 +15,7 @@
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 #define MAX_RESULTS 1024
 #define MAX_TUPLE_LENGTH 256
+#define MAX_MESSAGE_LENGTH 128
 
 typedef struct _Windows {
     WINDOW *menu_win,
@@ -47,6 +48,7 @@ typedef struct _Menus{
     int no_items;
     ITEM **menuitems;
     char **out_win_choices;
+    char **out_win_extra;
 } _Menus;
 
 typedef struct _Forms{

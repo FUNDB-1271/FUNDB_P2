@@ -248,7 +248,7 @@ void loop(_Windows *windows, _Menus *menus,
                 tmpStr1 = field_buffer((forms->search_form_items)[1], 0);
                 tmpStr2 = field_buffer((forms->search_form_items)[3], 0);
                 tmpStr3 = field_buffer((forms->search_form_items)[5], 0);
-                results_search(tmpStr1, tmpStr2, tmpStr3, &n_out_choices, & (menus->out_win_choices),
+                results_search(tmpStr1, tmpStr2, tmpStr3, &n_out_choices, & (menus->out_win_choices), &(menus->out_win_extra),
                                windows->cols_out_win-4, windows->rows_out_win-2);
                 print_out(out_win, menus->out_win_choices, n_out_choices, starting_row_index, screen_rows, 
                           out_highlight, windows->out_title);
@@ -259,14 +259,15 @@ void loop(_Windows *windows, _Menus *menus,
 
             }
             else if ((choice == SEARCH) && (focus == FOCUS_RIGHT)) {
-                char buffer[256];
-                char duration[256];
-                sprintf(buffer, "%-15s %-15s %-15s %-15s\n", "Flight", "Aircraft", "Departure", "Arrival");
-                write_msg(msg_win,buffer, 1, 1, windows->msg_title, 1);
-                sscanf((menus->out_win_choices)[out_highlight], "%d %d %d %s %s %s %s",
-                    &flight, &seat, &connections, departure, arrival, duration, aircraft);
-                snprintf(buffer, 128, "%-15d %-15s %-15s %-15s\n", flight, aircraft, departure, arrival);
-                write_msg(msg_win, buffer, 2, 1, windows->msg_title, 0);
+                if (strlen(menus->out_win_extra[out_highlight]) > ONE_WAY_LENGTH) {
+                    sprintf(buffer, "%-7s %-7s %-20s %-20s %-20s %-20s %-10s %-10s", "Flight", "Flight2", "Departure1", "Arrival1", "Departure2", "Arrival2", "Aircraft1", "Aircraft2");
+                    write_msg(msg_win,buffer, 1, 1, windows->msg_title, 1);
+                    write_msg(msg_win, menus->out_win_extra[out_highlight], 2, 1, windows->msg_title, 0);
+                } else {
+                    sprintf(buffer, "%-7s %-20s %-20s %-10s", "Flight", "Departure", "Arrival", "Aircraft");
+                    write_msg(msg_win, buffer, 1, 1, windows->msg_title,1);
+                    write_msg(msg_win, menus->out_win_extra[out_highlight], 2, 1, windows->msg_title, 0);
+                }
             }
             else if ((choice == BPASS) && (focus == FOCUS_LEFT)) {
                 out_highlight = 0;

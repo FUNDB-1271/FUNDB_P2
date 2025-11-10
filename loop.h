@@ -15,6 +15,8 @@
 #define BPASS 1
 #define QUIT 2
 
+#define ONE_WAY_LENGTH 70
+
 #define FOCUS_LEFT 0
 #define FOCUS_RIGHT 1
 

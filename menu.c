@@ -184,8 +184,12 @@ The leaks you should worry about are the “unreachable” leaks because they in
     free(forms.bpass_form_items);
 
     for (i = 0; i < windows.rows_out_win; i++)
+    {
         free(menus.out_win_choices[i]);
+        free(menus.out_win_extra[i]);
+    }
     free(menus.out_win_choices);
+    free(menus.out_win_extra);
 
     /*free panels */
     del_panel(panels.search_panel);
