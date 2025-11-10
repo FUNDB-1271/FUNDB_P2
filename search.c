@@ -30,16 +30,13 @@ void    results_search(char * from, char *to, char *date,
   SQLCHAR departure_date[256];
   SQLCHAR arrival_date[256];
   SQLCHAR time_elapsed[256];
+  SQLCHAR aircraft_code[256];
   char buf[512];
   FILE *f = NULL;
   int row = 0;
   int t = 0;
-  int i;
   SQLSMALLINT num_cols;
   char header[256] = "";
-  SQLCHAR col_name[128];
-  SQLSMALLINT name_len, data_type, decimal_digits, nullable;
-  SQLULEN col_size;
   const char *query = "WITH vacancies AS\n"
 "(\n"
 "          SELECT    ts.flight_id,\n"
@@ -162,7 +159,8 @@ void    results_search(char * from, char *to, char *date,
   ret = SQLBindCol(stmt, 3, SQL_C_LONG, &connection_flights, sizeof(connection_flights), NULL);
   ret = SQLBindCol(stmt, 4, SQL_C_CHAR, departure_date, sizeof(departure_date), NULL);
   ret = SQLBindCol(stmt, 5, SQL_C_CHAR, arrival_date, sizeof(arrival_date), NULL);
-  ret = SQLBindCol(stmt, 6, SQL_C_CHAR, time_elapsed, sizeof(time_elapsed), NULL);      
+  ret = SQLBindCol(stmt, 6, SQL_C_CHAR, time_elapsed, sizeof(time_elapsed), NULL);    
+  ret = SQLBindCol(stmt, 7, SQL_C_CHAR, aircraft_code, sizeof(aircraft_code), NULL);        
 
   SQLNumResultCols(stmt, &num_cols);
 
@@ -175,14 +173,25 @@ void    results_search(char * from, char *to, char *date,
   row++;
 
   while (SQL_SUCCEEDED(SQLFetch(stmt)) && row < max_rows) {
-    sprintf(buf, "%-15d %-15d %-15d %-15s %-15s %-15s\n",
+    sprintf(buf, "%-15d %-15d %-15d %-15s %-15s %-15s %-15s\n",
       flight_id,
       number_of_seats,
       connection_flights,
       departure_date,
       arrival_date,
-      time_elapsed);
+      time_elapsed,
+      aircraft_code);
     fprintf(f, "%d, %s", row, buf);
+    snprintf(buf, sizeof(buf),
+         "%-15d %-15d %-15d %-15.15s %-15.15s %-15.15s %-15.15s\n",
+         flight_id,
+         number_of_seats,
+         connection_flights,
+         (char *)departure_date,
+         (char *)arrival_date,
+         (char *)time_elapsed,
+         (char *)aircraft_code);
+
 
     t = strlen(buf)+1;
     t = MIN(t, max_length);

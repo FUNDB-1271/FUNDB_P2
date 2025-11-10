@@ -23,6 +23,7 @@
 */
 #include "loop.h"
 #include "windows.h"
+
 #include <string.h>
 #include <stdio.h>
 
@@ -70,7 +71,9 @@ void loop(_Windows *windows, _Menus *menus,
     int starting_row_index = 0;
     int screen_rows = 0;
     int i = 0; /* dummy variable for loops */
-    int len;
+    int seat, connections;
+    int flight;
+    char aircraft[32], departure[32], arrival[32];
 
     (void) curs_set(1); /* show cursor */
     menu = menus->menu;
@@ -257,19 +260,12 @@ void loop(_Windows *windows, _Menus *menus,
             }
             else if ((choice == SEARCH) && (focus == FOCUS_RIGHT)) {
                 char buffer[256];
-
-            char flight[32], aircraft[32], departure[32], arrival[32], connections[32];
-
-            
-
-            sprintf(buffer, "%-15s %-15s %-15s %-15s\n", "Flight", "Aircraft", "Departure", "Arrival");
-            write_msg(msg_win,buffer, 1, 1, windows->msg_title, 1);
-
-            while (sscanf((menus->out_win_choices)[out_highlight], "%s %s %s %s %s",
-                flight, aircraft, connections, departure, arrival) == 5){
-                    snprintf(buffer, 128, "%-15s %-15s %-15s %-15s\n", flight, aircraft, departure, arrival);
-                    write_msg(msg_win, buffer, 2, 1, windows->msg_title, 0);
-                }
+                sprintf(buffer, "%-15s %-15s %-15s %-15s\n", "Flight", "Aircraft", "Departure", "Arrival");
+                write_msg(msg_win,buffer, 1, 1, windows->msg_title, 1);
+                sscanf((menus->out_win_choices)[out_highlight], "%d %d %d %s %s %s",
+                    &flight, &seat, &connections, departure, arrival, aircraft);
+                snprintf(buffer, 128, "%-15d %-15s %-15s %-15s\n", flight, aircraft, departure, arrival);
+                write_msg(msg_win, buffer, 2, 1, windows->msg_title, 0);
             }
             else if ((choice == BPASS) && (focus == FOCUS_LEFT)) {
                 out_highlight = 0;
