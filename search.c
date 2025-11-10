@@ -7,8 +7,7 @@ void exit_safely(SQLHSTMT *stmt);
 
 void    results_search(char * from, char *to, char *date,
                        int * n_choices, char *** choices,
-                       char *** choices_extra, int max_length,
-                       int max_rows)
+                       char *** choices_extra)
    /**here you need to do your query and fill the choices array of strings
  *
  * @param from form field from
@@ -36,7 +35,6 @@ void    results_search(char * from, char *to, char *date,
   char buf1[512], buf2[512];
   int row = 0;
   int t2 = 0, t1 = 0;
-  SQLSMALLINT num_cols;
   char header[256] = "";
   const char *query = "WITH vacancies AS\n"
 "(\n"
@@ -344,13 +342,15 @@ void    results_search(char * from, char *to, char *date,
       sprintf(buf2, "%-7d %-7d %-20s %-20s %-20s %-20s %-10s %-10s", flight_id, flight_id2, f1_departure_date, f1_arrival_date, f2_departure_date, f2_arrival_date, f1_aircraft_code, f2_aircraft_code);
     }
 
+    /* set result row */
     t1 = strlen(buf1)+1;
     t1 = MIN(t1, MAX_TUPLE_LENGTH);
 
+    /* set result info (message attributes) */
     t2 = strlen(buf2)+1;
     t2 = MIN(t2, MAX_MESSAGE_LENGTH);
 
-    /* copy up to max_length-1 characters, ensure NUL termination */
+    /* copy up to max_length-1 characters, ensure NULL termination */
     strncpy((*choices)[row], (char*)buf1, t1);
     (*choices)[row][t1 - 1] = '\0';
     strncpy((*choices_extra)[row], (char*)buf2, t2);

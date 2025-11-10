@@ -71,9 +71,6 @@ void loop(_Windows *windows, _Menus *menus,
     int starting_row_index = 0;
     int screen_rows = 0;
     int i = 0; /* dummy variable for loops */
-    int seat, connections;
-    int flight;
-    char aircraft[32], departure[32], arrival[32];
 
     (void) curs_set(1); /* show cursor */
     menu = menus->menu;
@@ -248,8 +245,7 @@ void loop(_Windows *windows, _Menus *menus,
                 tmpStr1 = field_buffer((forms->search_form_items)[1], 0);
                 tmpStr2 = field_buffer((forms->search_form_items)[3], 0);
                 tmpStr3 = field_buffer((forms->search_form_items)[5], 0);
-                results_search(tmpStr1, tmpStr2, tmpStr3, &n_out_choices, & (menus->out_win_choices), &(menus->out_win_extra),
-                               windows->cols_out_win-4, windows->rows_out_win-2);
+                results_search(tmpStr1, tmpStr2, tmpStr3, &n_out_choices, & (menus->out_win_choices), &(menus->out_win_extra));
                 print_out(out_win, menus->out_win_choices, n_out_choices, starting_row_index, screen_rows, 
                           out_highlight, windows->out_title, SEARCH_PRINT);
                 if ((bool)DEBUG) {

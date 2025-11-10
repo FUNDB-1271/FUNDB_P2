@@ -22,15 +22,6 @@ int results_bpass(char * book_ref, int * n_choices, char *** choices, int max_le
     int t = 0;
     SQLSMALLINT num_cols;
     char header[256] = "";
-
-    /* Conectarse */
-    ret = odbc_connect(&env, &dbc);
-    if (!SQL_SUCCEEDED(ret)) {
-        fprintf(stderr, "Error: no se pudo conectar a la base de datos.\n");
-        return EXIT_FAILURE;
-    }
-
-    /* Query con CTEs */
     const char *query =
     "WITH tickets_to_assign AS ("
     "    SELECT t.ticket_no, tf.flight_id, f.scheduled_departure, f.aircraft_code, t.passenger_name "
@@ -68,6 +59,13 @@ int results_bpass(char * book_ref, int * n_choices, char *** choices, int max_le
     "    boarding_no,"
     "    seat_no;";
     
+    /* Conectarse */
+    ret = odbc_connect(&env, &dbc);
+    if (!SQL_SUCCEEDED(ret)) {
+        fprintf(stderr, "Error: no se pudo conectar a la base de datos.\n");
+        return EXIT_FAILURE;
+    }
+
     /* Crear un manejador de sentencia */
     SQLAllocHandle(SQL_HANDLE_STMT, dbc, &stmt);
     SQLPrepare(stmt, (SQLCHAR*) query, SQL_NTS);
