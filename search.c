@@ -24,15 +24,16 @@ void    results_search(char * from, char *to, char *date,
   SQLHDBC dbc;
   SQLHSTMT stmt;
   SQLRETURN ret;
-  SQLINTEGER flight_id;
+  SQLINTEGER flight_id, flight_id2;
   SQLINTEGER number_of_seats;
   SQLINTEGER connection_flights;
-  SQLCHAR departure_date[256];
-  SQLCHAR arrival_date[256];
+  SQLCHAR f1_departure_date[256], f2_departure_date[256];
+  SQLCHAR f1_arrival_date[256], f2_arrival_date[256];
+  SQLCHAR f1_aircraft_code[256], f2_aircraft_code[256];
   SQLCHAR time_elapsed[256];
-  SQLCHAR aircraft_code[256];
-  char buf[512];
+  SQLLEN len1, len2, len3, len4, len5, len6, len7, len8, len9, len10, len11;
   FILE *f = NULL;
+  char buf[512];
   int row = 0;
   int t = 0;
   SQLSMALLINT num_cols;
@@ -56,16 +57,20 @@ void    results_search(char * from, char *to, char *date,
 "                             GROUP BY flight_id) os\n"
 "          ON        os.flight_id = ts.flight_id ), direct_flights AS\n"
 "(\n"
-"         SELECT   f.flight_id,\n"
+"         SELECT   f.flight_id,\n"  
+"                  NULL::int AS flight_id2,\n"  
 "                  v.n_seats,\n"
 "                  0 AS connection_flights,\n"
 "                  departure_airport,\n"
 "                  NULL AS connection_airport,\n"
 "                  arrival_airport,\n"
-"                  scheduled_departure::                      date,\n"
-"                  scheduled_arrival::                        date,\n"
+"                  scheduled_departure AS flight_1_departure,\n"
+"                  scheduled_arrival AS flight_1_arrival,\n"
+"                  NULL::timestamp AS flight_2_departure,\n"
+"                  NULL::timestamp AS flight_2_arrival,\n"
 "                  scheduled_arrival - scheduled_departure AS time_elapsed,\n"
-"                  f.aircraft_code\n"
+"                  f.aircraft_code AS f1_aircraft,\n"
+"                  NULL AS f2_aircraft\n"
 "         FROM     flights f\n"
 "         JOIN     vacancies v\n"
 "         ON       v.flight_id = f.flight_id\n"
@@ -76,15 +81,19 @@ void    results_search(char * from, char *to, char *date,
 "         ORDER BY time_elapsed ), indirect_flights AS\n"
 "(\n"
 "         SELECT   f1.flight_id,\n"
+"                  f2.flight_id AS flight_id2,\n"  
 "                  Least(v1.n_seats, v2.n_seats) AS n_seats,\n"
 "                  1                             AS connection_flights,\n"
 "                  f1.departure_airport,\n"
 "                  f1.arrival_airport AS connection_airport,\n"
 "                  f2.arrival_airport,\n"
-"                  f1.scheduled_departure::                         date,\n"
-"                  f2.scheduled_arrival::                           date,\n"
+"                  f1.scheduled_departure AS flight_1_departure,\n"
+"                  f1.scheduled_arrival AS flight_1_arrival,\n"
+"                  f2.scheduled_departure AS flight_2_departure,\n"
+"                  f2.scheduled_arrival AS flight_2_arrival,\n"
 "                  f2.scheduled_arrival - f1.scheduled_departure AS time_elapsed,\n"
-"                  f2.aircraft_code\n"
+"                  f1.aircraft_code AS f1_aircraft,\n"
+"                  f2.aircraft_code AS f2_aircraft\n"
 "         FROM     flights f1\n"
 "         JOIN     flights f2\n"
 "         ON       f1.arrival_airport = f2.departure_airport\n"
@@ -107,13 +116,17 @@ void    results_search(char * from, char *to, char *date,
 "SELECT   flight_id AS \"Flight\",\n"
 "         n_seats AS \"Seat\",\n"
 "         connection_flights AS \"Connections\",\n"
-"         scheduled_departure::date AS \"Departure\",\n"
-"         scheduled_arrival::date AS \"Arrival\",\n"
+"         flight_1_departure AS \"Departure1\",\n"
+"         flight_1_arrival AS \"Arrival1\",\n"
+"         flight_2_departure AS \"Departure2\",\n"
+"         flight_2_arrival AS \"Arrival2\",\n"
 "         time_elapsed AS \"Duration\",\n"
-"         aircraft_code AS \"Aircraft\"\n"
+"         f1_aircraft AS \"Aircraft1\",\n"
+"         f2_aircraft AS \"Aircraft2\",\n"
+"         flight_id2 AS \"Flight2\"\n"
 "FROM     total_flights\n"
 "WHERE    n_seats != 0\n"
-"ORDER BY time_elapsed, scheduled_departure;";
+"ORDER BY time_elapsed, flight_1_departure;";
 
 
   if (!(f = fopen("salida.txt", "w"))) return;
@@ -123,77 +136,226 @@ void    results_search(char * from, char *to, char *date,
     return;
   }
 
-  SQLAllocHandle(SQL_HANDLE_STMT, dbc, &stmt);
-
-  ret = SQLPrepare(stmt, (SQLCHAR *) query, SQL_NTS);
-
-  fprintf(f, "%s", query);
-  fprintf(f, "\n\n---\n---\n---\n\n");
-
-
-  if (!(SQL_SUCCEEDED(ret))) {
-    fprintf(f, "Error preparando statement\n"); 
-    exit_safely(stmt);
-    fclose(f);
+  ret = SQLAllocHandle(SQL_HANDLE_STMT, dbc, &stmt);
+  if (!SQL_SUCCEEDED(ret)) {
     return;
   }
 
-  SQLBindParameter(stmt, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, strlen(from), 0, from, strlen(from)+1, NULL);
-  SQLBindParameter(stmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, strlen(to), 0, to, strlen(to)+1, NULL);
-  SQLBindParameter(stmt, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, strlen(date), 0, date, strlen(date)+1, NULL);
-  SQLBindParameter(stmt, 4, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, strlen(from), 0, from, strlen(from)+1, NULL);
-  SQLBindParameter(stmt, 5, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, strlen(to), 0, to, strlen(to)+1, NULL);
-  SQLBindParameter(stmt, 6, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, strlen(date), 0, date, strlen(date)+1, NULL);
+  ret = SQLPrepare(stmt, (SQLCHAR *) query, SQL_NTS);
+  if (!SQL_SUCCEEDED(ret)) {
+    odbc_extract_error("salida.txt", stmt, SQL_HANDLE_STMT);
+    SQLFreeHandle(SQL_HANDLE_STMT, stmt);
+    return;
+  }
+
+  fprintf(f, "%s\n", query);
+
+  ret = SQLBindParameter(stmt, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, strlen(from), 0, from, strlen(from)+1, NULL);
+  if (!SQL_SUCCEEDED(ret)) {
+    odbc_extract_error("salida.txt", stmt, SQL_HANDLE_STMT);
+    SQLFreeHandle(SQL_HANDLE_STMT, stmt);
+    return;
+  }
+
+/*********************************************          BIND PARAMETERS         ****************************************************************+*/
+  
+  ret = SQLBindParameter(stmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, strlen(to), 0, to, strlen(to)+1, NULL);
+  if (!SQL_SUCCEEDED(ret)) {
+    odbc_extract_error("salida.txt", stmt, SQL_HANDLE_STMT);
+    SQLFreeHandle(SQL_HANDLE_STMT, stmt);
+    return;
+  }
+  
+  ret = SQLBindParameter(stmt, 3, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, strlen(date), 0, date, strlen(date)+1, NULL);
+  if (!SQL_SUCCEEDED(ret)) {
+    odbc_extract_error("salida.txt", stmt, SQL_HANDLE_STMT);
+    SQLFreeHandle(SQL_HANDLE_STMT, stmt);
+    return;
+  }
+  
+  ret = SQLBindParameter(stmt, 4, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, strlen(from), 0, from, strlen(from)+1, NULL);
+  if (!SQL_SUCCEEDED(ret)) {
+    odbc_extract_error("salida.txt", stmt, SQL_HANDLE_STMT);
+    SQLFreeHandle(SQL_HANDLE_STMT, stmt);
+    return;
+  }
+  
+  ret = SQLBindParameter(stmt, 5, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, strlen(to), 0, to, strlen(to)+1, NULL);
+  if (!SQL_SUCCEEDED(ret)) {
+    odbc_extract_error("salida.txt", stmt, SQL_HANDLE_STMT);
+    SQLFreeHandle(SQL_HANDLE_STMT, stmt);
+    return;
+  }
+  
+  ret = SQLBindParameter(stmt, 6, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, strlen(date), 0, date, strlen(date)+1, NULL);
+  if (!SQL_SUCCEEDED(ret)) {
+    odbc_extract_error("salida.txt", stmt, SQL_HANDLE_STMT);
+    SQLFreeHandle(SQL_HANDLE_STMT, stmt);
+    return;
+  }
+
+
+/*********************************************             EXECUTE            ****************************************************************+*/
 
 
   ret = SQLExecute(stmt);
   if (!SQL_SUCCEEDED(ret)) {
-      fprintf(f, "Execute failed\n");
-      odbc_show_error(f, SQL_HANDLE_STMT, stmt);
-      fclose(f);
+      odbc_extract_error("salida.txt", stmt, SQL_HANDLE_STMT);
       return;
   }
 
-  ret = SQLBindCol(stmt, 1, SQL_C_LONG, &flight_id, sizeof(flight_id), NULL);
-  ret = SQLBindCol(stmt, 2, SQL_C_LONG, &number_of_seats, sizeof(number_of_seats), NULL);
-  ret = SQLBindCol(stmt, 3, SQL_C_LONG, &connection_flights, sizeof(connection_flights), NULL);
-  ret = SQLBindCol(stmt, 4, SQL_C_CHAR, departure_date, sizeof(departure_date), NULL);
-  ret = SQLBindCol(stmt, 5, SQL_C_CHAR, arrival_date, sizeof(arrival_date), NULL);
-  ret = SQLBindCol(stmt, 6, SQL_C_CHAR, time_elapsed, sizeof(time_elapsed), NULL);    
-  ret = SQLBindCol(stmt, 7, SQL_C_CHAR, aircraft_code, sizeof(aircraft_code), NULL);        
 
-  SQLNumResultCols(stmt, &num_cols);
 
-  sprintf(header, "%-15s %-15s %-15s %-15s %-15s %-15s\n",
-    "Flight", "Seat", "Connections", "Departure", "Arrival", "Duration");
+/*********************************************         BIND EXIT COLUMNS         ****************************************************************+*/
+
+
+  ret = SQLBindCol(stmt, 1, SQL_C_LONG, &flight_id, sizeof(flight_id), &len1);
+  if (!SQL_SUCCEEDED(ret)) {
+    fprintf(stderr, "No se pudo hacer BindCol para flight_id.\n");
+    odbc_extract_error("SQLBindCol", stmt, SQL_HANDLE_STMT);
+    SQLFreeHandle(SQL_HANDLE_STMT, stmt);
+    odbc_disconnect(env, dbc);
+    return;
+  }
+  
+  ret = SQLBindCol(stmt, 2, SQL_C_LONG, &number_of_seats, sizeof(number_of_seats), &len2);
+  if (!SQL_SUCCEEDED(ret)) {
+    fprintf(stderr, "No se pudo hacer BindCol para number_of_seats.\n");
+    odbc_extract_error("SQLBindCol", stmt, SQL_HANDLE_STMT);
+    SQLFreeHandle(SQL_HANDLE_STMT, stmt);
+    odbc_disconnect(env, dbc);
+    return;
+  }
+  
+  ret = SQLBindCol(stmt, 3, SQL_C_LONG, &connection_flights, sizeof(connection_flights), &len3);
+  if (!SQL_SUCCEEDED(ret)) {
+    fprintf(stderr, "No se pudo hacer BindCol para connection_flights.\n");
+    odbc_extract_error("SQLBindCol", stmt, SQL_HANDLE_STMT);
+    SQLFreeHandle(SQL_HANDLE_STMT, stmt);
+    odbc_disconnect(env, dbc);
+    return;
+  }
+  
+  ret = SQLBindCol(stmt, 4, SQL_C_CHAR, f1_departure_date, sizeof(f1_departure_date), &len4);
+  if (!SQL_SUCCEEDED(ret)) {
+    fprintf(stderr, "No se pudo hacer BindCol para f1_departure_date.\n");
+    odbc_extract_error("SQLBindCol", stmt, SQL_HANDLE_STMT);
+    SQLFreeHandle(SQL_HANDLE_STMT, stmt);
+    odbc_disconnect(env, dbc);
+    return;
+  }
+  
+  ret = SQLBindCol(stmt, 5, SQL_C_CHAR, f1_arrival_date, sizeof(f1_arrival_date), &len5);
+  if (!SQL_SUCCEEDED(ret)) {
+    fprintf(stderr, "No se pudo hacer BindCol para f1_arrival_date.\n");
+    odbc_extract_error("SQLBindCol", stmt, SQL_HANDLE_STMT);
+    SQLFreeHandle(SQL_HANDLE_STMT, stmt);
+    odbc_disconnect(env, dbc);
+    return;
+  }
+  
+  ret = SQLBindCol(stmt, 6, SQL_C_CHAR, f2_departure_date, sizeof(f2_departure_date), &len6);
+  if (!SQL_SUCCEEDED(ret)) {
+    fprintf(stderr, "No se pudo hacer BindCol para f2_departure_date.\n");
+    odbc_extract_error("SQLBindCol", stmt, SQL_HANDLE_STMT);
+    SQLFreeHandle(SQL_HANDLE_STMT, stmt);
+    odbc_disconnect(env, dbc);
+    return;
+  }
+  
+  ret = SQLBindCol(stmt, 7, SQL_C_CHAR, f2_arrival_date, sizeof(f2_arrival_date), &len7);
+  if (!SQL_SUCCEEDED(ret)) {
+    fprintf(stderr, "No se pudo hacer BindCol para f2_arrival_date.\n");
+    odbc_extract_error("SQLBindCol", stmt, SQL_HANDLE_STMT);
+    SQLFreeHandle(SQL_HANDLE_STMT, stmt);
+    odbc_disconnect(env, dbc);
+    return;
+  }
+  
+  ret = SQLBindCol(stmt, 8, SQL_C_CHAR, time_elapsed, sizeof(time_elapsed), &len8);    
+  if (!SQL_SUCCEEDED(ret)) {
+    fprintf(stderr, "No se pudo hacer BindCol para time_elapsed.\n");
+    odbc_extract_error("SQLBindCol", stmt, SQL_HANDLE_STMT);
+    SQLFreeHandle(SQL_HANDLE_STMT, stmt);
+    odbc_disconnect(env, dbc);
+    return;
+  }
+  
+  ret = SQLBindCol(stmt, 9, SQL_C_CHAR, f1_aircraft_code, sizeof(f1_aircraft_code), &len9);
+  if (!SQL_SUCCEEDED(ret)) {
+    fprintf(stderr, "No se pudo hacer BindCol para f1_aircraft_code.\n");
+    odbc_extract_error("SQLBindCol", stmt, SQL_HANDLE_STMT);
+    SQLFreeHandle(SQL_HANDLE_STMT, stmt);
+    odbc_disconnect(env, dbc);
+    return;
+  }
+  
+  ret = SQLBindCol(stmt, 10, SQL_C_CHAR, f2_aircraft_code, sizeof(f2_aircraft_code), &len10);
+  if (!SQL_SUCCEEDED(ret)) {
+    fprintf(stderr, "No se pudo hacer BindCol para f2_aircraft_code.\n");
+    odbc_extract_error("SQLBindCol", stmt, SQL_HANDLE_STMT);
+    SQLFreeHandle(SQL_HANDLE_STMT, stmt);
+    odbc_disconnect(env, dbc);
+    return;
+  }
+
+  ret = SQLBindCol(stmt, 11, SQL_C_LONG, &flight_id2, sizeof(flight_id2), &len11);
+  if (!SQL_SUCCEEDED(ret)) {
+    fprintf(stderr, "No se pudo hacer BindCol para flight_id2.\n");
+    odbc_extract_error("SQLBindCol", stmt, SQL_HANDLE_STMT);
+    SQLFreeHandle(SQL_HANDLE_STMT, stmt);
+    odbc_disconnect(env, dbc);
+    return;
+  }
+
+  sprintf(header, "%-15s %-15s %-15s %-15s %-20s %-20s %-20s %-20s %-15s %-10s %-10s\n",
+    "Flight", "Flight 2", "Seat", "Connections", "Departure", "Arrival", "Departure2", "Arrival2", "Duration", "Aircraft1", "Aircraft2");
 
   /* Guardar el encabezado como primera fila del menú */
   strncpy((*choices)[row], header, max_length - 1);
   (*choices)[row][max_length - 1] = '\0';
   row++;
 
-  while (SQL_SUCCEEDED(SQLFetch(stmt)) && row < MAX_RESULTS) { /* importante que el tope del bucle sea MAX_RESULTS para guardar más de una página */
-    sprintf(buf, "%-15d %-15d %-15d %-15s %-15s %-15s %-15s\n",
+  /* importante que el tope del bucle sea MAX_RESULTS para guardar más de una página */
+  while (SQL_SUCCEEDED(SQLFetch(stmt)) && row < MAX_RESULTS) 
+  { 
+    
+    /* default values in case of null attributes */
+    if (len4 == SQL_NULL_DATA) f1_departure_date[0] = '\0'; 
+    if (len5 == SQL_NULL_DATA) f1_arrival_date[0] = '\0';
+    if (len6 == SQL_NULL_DATA) f2_departure_date[0] = '\0';
+    if (len7 == SQL_NULL_DATA) f2_arrival_date[0] = '\0';
+    if (len8 == SQL_NULL_DATA) time_elapsed[0] = '\0';
+    if (len9 == SQL_NULL_DATA) f1_aircraft_code[0] = '\0';
+    if (len10 == SQL_NULL_DATA) f2_aircraft_code[0] = '\0';
+    if (len11 == SQL_NULL_DATA) flight_id2 = -1;    
+
+    
+    sprintf(buf, "%-15d %-15d %-15d %-15d %-20s %-20s %-15s %-20s %-20s %-10s %-10s\n",
       flight_id,
+      flight_id2,
       number_of_seats,
       connection_flights,
-      departure_date,
-      arrival_date,
+      f1_departure_date,
+      f2_arrival_date,
       time_elapsed,
-      aircraft_code);
-    fprintf(f, "%d, %s", row, buf);
+      f1_arrival_date,
+      f2_departure_date,
+      f1_aircraft_code,
+      f2_aircraft_code);
 
     t = strlen(buf)+1;
-    t = MIN(t, max_length);
+    t = MIN(t, MAX_TUPLE_LENGTH);
 
     /* copy up to max_length-1 characters, ensure NUL termination */
-    strncpy((*choices)[row], (char*)buf, max_length - 1);
-    (*choices)[row][max_length - 1] = '\0';
+    strncpy((*choices)[row], (char*)buf, t);
+    (*choices)[row][t - 1] = '\0';
     row++;
   }
 
   *n_choices = row;
   SQLCloseCursor(stmt);
+
   fclose(f);
 
   fflush(stdout);
@@ -206,8 +368,4 @@ void    results_search(char * from, char *to, char *date,
   if (!SQL_SUCCEEDED(ret)) {
       return; 
   }
-}
-
-void exit_safely(SQLHSTMT *stmt) {
-  if (stmt) SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 }

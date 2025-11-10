@@ -14,6 +14,7 @@
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 #define MAX_RESULTS 1024
+#define MAX_TUPLE_LENGTH 256
 
 typedef struct _Windows {
     WINDOW *menu_win,
