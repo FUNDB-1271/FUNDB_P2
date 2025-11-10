@@ -5,6 +5,13 @@
 #include "windows.h"
 
 
+const char *query_headers[] = 
+    {    
+    "Flight         Seat           Connections    Departure           Arrival             Duration       ",
+    "Ticket_Number  Flight      Boarding_No    Seat      ",
+    ""
+    };
+
 static WINDOW *create_newwin(int height, int width, int starty, int startx,
                       char *title) {
     /** Create a window and draw a title
@@ -287,7 +294,8 @@ void print_out(WINDOW *win,
                int starting_index,
                int screen_rows, 
                int highlight,
-               char *title)
+               char *title, 
+               int query)
 /** print array of strings choices window win (usually out_win)
  *
  * @param win
@@ -305,10 +313,10 @@ void print_out(WINDOW *win,
     y = 1;
     if (end > menuitems) end = menuitems;
 
-
-
     (void) box(win, 0, 0);
     (void) mvwaddstr(win, 0, 2, title);
+
+    (void) mvwaddstr(win, 1, 2, query_headers[query]);
     
     for (i = starting_index; i < end; ++i, y++) {
         if (highlight == i) /* High light the present choice  */

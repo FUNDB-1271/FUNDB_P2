@@ -78,7 +78,8 @@ void print_out(WINDOW *win,
                int starting_index,
                int screen_rows, 
                int highlight,
-               char *title);
+               char *title,
+               int query);
                
 void write_msg(WINDOW * win, char * msg, int y, int x, char * title, int clear);
 

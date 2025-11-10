@@ -335,17 +335,12 @@ void    results_search(char * from, char *to, char *date,
     if (len11 == SQL_NULL_DATA) flight_id2 = -1;    
 
     
-    sprintf(buf1, "%-15d %-15d %-15d %-20s %-20s %-15s\n",
-      flight_id,
-      number_of_seats,
-      connection_flights,
-      f1_departure_date,
-      f2_arrival_date,
-      time_elapsed);
 
     if (flight_id2 == -1) {
+      sprintf(buf1, "%-15d %-15d %-15d %-20s %-20s %-15s", flight_id, number_of_seats, connection_flights, f1_departure_date, f1_arrival_date, time_elapsed);
       sprintf(buf2, "%-7d %-20s %-20s %-15s", flight_id, f1_departure_date, f1_arrival_date, f1_aircraft_code);
     } else {
+      sprintf(buf1, "%-15d %-15d %-15d %-20s %-20s %-15s", flight_id, number_of_seats, connection_flights, f1_departure_date, f2_arrival_date, time_elapsed);
       sprintf(buf2, "%-7d %-7d %-20s %-20s %-20s %-20s %-10s %-10s", flight_id, flight_id2, f1_departure_date, f1_arrival_date, f2_departure_date, f2_arrival_date, f1_aircraft_code, f2_aircraft_code);
     }
 

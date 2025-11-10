@@ -123,20 +123,20 @@ void loop(_Windows *windows, _Menus *menus,
                     starting_row_index = (out_highlight / screen_rows) * screen_rows;
 
                     print_out(out_win, menus->out_win_choices, n_out_choices,
-                              starting_row_index, screen_rows, out_highlight, windows->out_title);
+                              starting_row_index, screen_rows, out_highlight, windows->out_title, VOID_PRINT);
                 }
                 break;
 
             case KEY_PPAGE: /* Page Up */
                 if (focus == FOCUS_RIGHT && n_out_choices > 0) {
                     /* jump the selection up by a page */
-                    out_highlight = MAX(out_highlight - screen_rows, 0);
+                    out_highlight = MAX(out_highlight - screen_rows, 1);
 
                     /* compute the page that contains the new highlight */
                     starting_row_index = (out_highlight / screen_rows) * screen_rows;
 
                     print_out(out_win, menus->out_win_choices, n_out_choices,
-                              starting_row_index, screen_rows, out_highlight, windows->out_title);
+                              starting_row_index, screen_rows, out_highlight, windows->out_title, VOID_PRINT);
                 }
                 break;            
             case KEY_RIGHT:
@@ -164,9 +164,9 @@ void loop(_Windows *windows, _Menus *menus,
                     (void) form_driver(forms->bpass_form, REQ_END_LINE);
                     (void) wrefresh(windows->form_bpass_win);
                 }  else if (focus == FOCUS_RIGHT){
-                    out_highlight = MAX(out_highlight - 1, 0);
+                    out_highlight = MAX(out_highlight - 1, 1);
                     print_out(out_win, menus->out_win_choices, n_out_choices, starting_row_index, screen_rows,
-                              out_highlight, windows->out_title);
+                              out_highlight, windows->out_title, VOID_PRINT);
                 }
                 break;
             case KEY_DOWN:
@@ -182,7 +182,7 @@ void loop(_Windows *windows, _Menus *menus,
                 } else if (focus == FOCUS_RIGHT){
                     out_highlight = MIN(out_highlight + 1, n_out_choices - 1);
                     print_out(out_win, menus->out_win_choices, n_out_choices, starting_row_index, screen_rows,
-                              out_highlight, windows->out_title);
+                              out_highlight, windows->out_title, VOID_PRINT);
                 }
                 break; 
             case KEY_STAB: /* tab key */
@@ -239,7 +239,7 @@ void loop(_Windows *windows, _Menus *menus,
             if (choice == QUIT)
                 break; /* quit */
             else if ((choice == SEARCH) && (focus == FOCUS_LEFT)) {
-                out_highlight = 0;
+                out_highlight = 1;
                 starting_row_index = 0;
                 for(i=0; i< rows_out_window ; i++)
                     (menus->out_win_choices)[i][0] = '\0';
@@ -251,7 +251,7 @@ void loop(_Windows *windows, _Menus *menus,
                 results_search(tmpStr1, tmpStr2, tmpStr3, &n_out_choices, & (menus->out_win_choices), &(menus->out_win_extra),
                                windows->cols_out_win-4, windows->rows_out_win-2);
                 print_out(out_win, menus->out_win_choices, n_out_choices, starting_row_index, screen_rows, 
-                          out_highlight, windows->out_title);
+                          out_highlight, windows->out_title, SEARCH_PRINT);
                 if ((bool)DEBUG) {
                     (void)snprintf(buffer, 128, "arg1=%s, arg2=%s, arg3=%s",  tmpStr1, tmpStr2, tmpStr3);
                     write_msg(msg_win, buffer, -1, -1, windows->msg_title, 1);
@@ -270,7 +270,7 @@ void loop(_Windows *windows, _Menus *menus,
                 }
             }
             else if ((choice == BPASS) && (focus == FOCUS_LEFT)) {
-                out_highlight = 0;
+                out_highlight = 1;
                 starting_row_index = 0;
                 for(i=0; i< rows_out_window ; i++)
                     (menus->out_win_choices)[i][0] = '\0';
@@ -280,7 +280,7 @@ void loop(_Windows *windows, _Menus *menus,
                 results_bpass(tmpStr1, &n_out_choices, & (menus->out_win_choices),
                               windows->cols_out_win-4, windows->rows_out_win-2);
                 print_out(out_win, menus->out_win_choices, n_out_choices, starting_row_index, screen_rows, 
-                          out_highlight, windows->out_title);
+                          out_highlight, windows->out_title, BPASS_PRINT);
             }
             else if ((choice == BPASS) && focus == (FOCUS_RIGHT)) {
                 write_msg(msg_win, (menus->out_win_choices)[out_highlight],
