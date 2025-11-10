@@ -245,6 +245,7 @@ void loop(_Windows *windows, _Menus *menus,
                 tmpStr1 = field_buffer((forms->search_form_items)[1], 0);
                 tmpStr2 = field_buffer((forms->search_form_items)[3], 0);
                 tmpStr3 = field_buffer((forms->search_form_items)[5], 0);
+                n_out_choices=1;
                 results_search(tmpStr1, tmpStr2, tmpStr3, &n_out_choices, & (menus->out_win_choices), &(menus->out_win_extra));
                 print_out(out_win, menus->out_win_choices, n_out_choices, starting_row_index, screen_rows, 
                           out_highlight, windows->out_title, SEARCH_PRINT);
@@ -252,7 +253,14 @@ void loop(_Windows *windows, _Menus *menus,
                     (void)snprintf(buffer, 128, "arg1=%s, arg2=%s, arg3=%s",  tmpStr1, tmpStr2, tmpStr3);
                     write_msg(msg_win, buffer, -1, -1, windows->msg_title, 1);
                 }
-
+                if (n_out_choices <= 1){
+                    sprintf(buffer, "No existen vuelos con esas especificaciones");
+                    write_msg(msg_win, buffer, 1, 1, windows->msg_title,1);
+                }
+                else{
+                    sprintf(buffer, "Mostrando los vuelos disponibles");
+                    write_msg(msg_win, buffer, 1, 1, windows->msg_title,1);    
+                }
             }
             else if ((choice == SEARCH) && (focus == FOCUS_RIGHT)) {
                 if (strlen(menus->out_win_extra[out_highlight]) > ONE_WAY_LENGTH) {
@@ -277,6 +285,21 @@ void loop(_Windows *windows, _Menus *menus,
                               windows->cols_out_win-4, windows->rows_out_win-2);
                 print_out(out_win, menus->out_win_choices, n_out_choices, starting_row_index, screen_rows, 
                           out_highlight, windows->out_title, BPASS_PRINT);
+                if (n_out_choices <= 1){
+                    sprintf(buffer, "No existen tickets sin tarjeta de embarque bajo la reserva con id: %s", tmpStr1);
+                    write_msg(msg_win, buffer, 1, 1, windows->msg_title,1);
+                }
+                else{
+                    if (n_out_choices == 2){
+                        sprintf(buffer, "Tarjeta de embarque creada correctamente para los tickets bajo la reserva con id: %s", tmpStr1);
+                        write_msg(msg_win, buffer, 1, 1, windows->msg_title,1);
+                    }
+                    else{
+                        sprintf(buffer, "Tarjetas de embarque creadas correctamente para los tickets bajo la reserva con id: %s", tmpStr1);
+                        write_msg(msg_win, buffer, 1, 1, windows->msg_title,1);
+                    }
+                    
+                }
             }
             else if ((choice == BPASS) && focus == (FOCUS_RIGHT)) {
                 write_msg(msg_win, (menus->out_win_choices)[out_highlight],
