@@ -260,10 +260,11 @@ void loop(_Windows *windows, _Menus *menus,
             }
             else if ((choice == SEARCH) && (focus == FOCUS_RIGHT)) {
                 char buffer[256];
+                char duration[256];
                 sprintf(buffer, "%-15s %-15s %-15s %-15s\n", "Flight", "Aircraft", "Departure", "Arrival");
                 write_msg(msg_win,buffer, 1, 1, windows->msg_title, 1);
-                sscanf((menus->out_win_choices)[out_highlight], "%d %d %d %s %s %s",
-                    &flight, &seat, &connections, departure, arrival, aircraft);
+                sscanf((menus->out_win_choices)[out_highlight], "%d %d %d %s %s %s %s",
+                    &flight, &seat, &connections, departure, arrival, duration, aircraft);
                 snprintf(buffer, 128, "%-15d %-15s %-15s %-15s\n", flight, aircraft, departure, arrival);
                 write_msg(msg_win, buffer, 2, 1, windows->msg_title, 0);
             }

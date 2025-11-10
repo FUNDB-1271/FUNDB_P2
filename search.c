@@ -182,16 +182,6 @@ void    results_search(char * from, char *to, char *date,
       time_elapsed,
       aircraft_code);
     fprintf(f, "%d, %s", row, buf);
-    snprintf(buf, sizeof(buf),
-         "%-15d %-15d %-15d %-15.15s %-15.15s %-15.15s %-15.15s\n",
-         flight_id,
-         number_of_seats,
-         connection_flights,
-         (char *)departure_date,
-         (char *)arrival_date,
-         (char *)time_elapsed,
-         (char *)aircraft_code);
-
 
     t = strlen(buf)+1;
     t = MIN(t, max_length);
