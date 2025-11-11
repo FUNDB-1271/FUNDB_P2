@@ -21,7 +21,6 @@ int results_bpass(char * book_ref, int * n_choices, char *** choices, int max_le
     char buf[512];
     int t = 0;
     SQLSMALLINT num_cols;
-    char header[256] = "";
     const char *query =
     "WITH tickets_to_assign AS ("
     "    SELECT "
@@ -94,17 +93,6 @@ int results_bpass(char * book_ref, int * n_choices, char *** choices, int max_le
     SQLBindCol(stmt, 4, SQL_C_CHAR, seat_no, sizeof(seat_no), NULL);
 
     SQLNumResultCols(stmt, &num_cols);
-
-    /* Crear encabezado dentro de choices */
-
-    sprintf(header, "%-15s %-12s %-15s %-10s\n",
-        "Ticket_Number", "Flight", "Boarding_No", "Seat");
-
-    /* Guardar el encabezado como primera fila del menú */
-    strncpy((*choices)[row], header, max_length - 1);
-    (*choices)[row][max_length - 1] = '\0';
-    row++;
-
 
     /* Leer y mostrar resultados */
     while (SQL_SUCCEEDED(ret = SQLFetch(stmt)) && row < MAX_RESULTS) { /* importante que el tope del bucle sea MAX_RESULTS para guardar más de una página */

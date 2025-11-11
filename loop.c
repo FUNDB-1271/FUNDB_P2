@@ -78,7 +78,7 @@ void loop(_Windows *windows, _Menus *menus,
     out_win = windows->out_win;
     msg_win = windows->msg_win;
     rows_out_window = windows->rows_out_win;
-    screen_rows = rows_out_window - 2; /* subtract title/top and bottom border */
+    screen_rows = rows_out_window - 3; /* subtract title/top and bottom border */
     if (screen_rows < 1) screen_rows = 1;
 
     while ((bool) TRUE) {
@@ -127,7 +127,7 @@ void loop(_Windows *windows, _Menus *menus,
             case KEY_PPAGE: /* Page Up */
                 if (focus == FOCUS_RIGHT && n_out_choices > 0) {
                     /* jump the selection up by a page */
-                    out_highlight = MAX(out_highlight - screen_rows, 1);
+                    out_highlight = MAX(out_highlight - screen_rows, 0);
 
                     /* compute the page that contains the new highlight */
                     starting_row_index = (out_highlight / screen_rows) * screen_rows;
@@ -161,7 +161,7 @@ void loop(_Windows *windows, _Menus *menus,
                     (void) form_driver(forms->bpass_form, REQ_END_LINE);
                     (void) wrefresh(windows->form_bpass_win);
                 }  else if (focus == FOCUS_RIGHT){
-                    out_highlight = MAX(out_highlight - 1, 1);
+                    out_highlight = MAX(out_highlight - 1, 0);
                     print_out(out_win, menus->out_win_choices, n_out_choices, starting_row_index, screen_rows,
                               out_highlight, windows->out_title, VOID_PRINT);
                 }
@@ -236,7 +236,7 @@ void loop(_Windows *windows, _Menus *menus,
             if (choice == QUIT)
                 break; /* quit */
             else if ((choice == SEARCH) && (focus == FOCUS_LEFT)) {
-                out_highlight = 1;
+                out_highlight = 0;
                 starting_row_index = 0;
                 for(i=0; i< rows_out_window ; i++)
                     (menus->out_win_choices)[i][0] = '\0';
@@ -246,7 +246,7 @@ void loop(_Windows *windows, _Menus *menus,
                 tmpStr2 = field_buffer((forms->search_form_items)[3], 0);
                 tmpStr3 = field_buffer((forms->search_form_items)[5], 0);
                 n_out_choices=1;
-                results_search(tmpStr1, tmpStr2, tmpStr3, &n_out_choices, & (menus->out_win_choices), &(menus->out_win_extra));
+                results_search(tmpStr1, tmpStr2, tmpStr3, &n_out_choices, & (menus->out_win_choices), &(menus->out_win_extra), windows->cols_out_win);
                 print_out(out_win, menus->out_win_choices, n_out_choices, starting_row_index, screen_rows, 
                           out_highlight, windows->out_title, SEARCH_PRINT);
                 if ((bool)DEBUG) {

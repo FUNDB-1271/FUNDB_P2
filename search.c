@@ -3,11 +3,9 @@
 */
 #include "search.h"
 
-void exit_safely(SQLHSTMT *stmt);
-
 void    results_search(char * from, char *to, char *date,
                        int * n_choices, char *** choices,
-                       char *** choices_extra)
+                       char *** choices_extra, int max_cols)
    /**here you need to do your query and fill the choices array of strings
  *
  * @param from form field from
@@ -35,7 +33,6 @@ void    results_search(char * from, char *to, char *date,
   char buf1[512], buf2[512];
   int row = 0;
   int t2 = 0, t1 = 0;
-  char header[256] = "";
   const char *query = "WITH vacancies AS\n"
 "(\n"
 "          SELECT    ts.flight_id,\n"
@@ -308,16 +305,6 @@ void    results_search(char * from, char *to, char *date,
 
 /**********************************************                 READ QUERY RESULTS                        **************************************************+*/
 
-  sprintf(header, "%-15s %-15s %-15s %-20s %-20s %-15s\n",
-    "Flight", "Seat", "Connections", "Departure", "Arrival", "Duration");
-
-  /* Guardar el encabezado como primera fila del menú */
-  strncpy((*choices)[row], header, strlen(header) + 1);
-  (*choices)[row][strlen(header)] = '\0';
-  strncpy((*choices_extra)[row], "", strlen("") + 1);
-  (*choices_extra)[row][strlen("")] = '\0';
-  row++;
-
   /* importante que el tope del bucle sea MAX_RESULTS para guardar más de una página */
   while (SQL_SUCCEEDED(SQLFetch(stmt)) && row < MAX_RESULTS) 
   { 
@@ -343,18 +330,20 @@ void    results_search(char * from, char *to, char *date,
     }
 
     /* set result row */
-    t1 = strlen(buf1)+1;
+    t1 = strlen(buf1);
     t1 = MIN(t1, MAX_TUPLE_LENGTH);
+    t1 = MIN(t1, max_cols - 1);
 
     /* set result info (message attributes) */
-    t2 = strlen(buf2)+1;
+    t2 = strlen(buf2);
     t2 = MIN(t2, MAX_MESSAGE_LENGTH);
+    t2 = MIN(t2, max_cols - 1);
 
     /* copy up to max_length-1 characters, ensure NULL termination */
     strncpy((*choices)[row], (char*)buf1, t1);
-    (*choices)[row][t1 - 1] = '\0';
+    (*choices)[row][t1] = '\0';
     strncpy((*choices_extra)[row], (char*)buf2, t2);
-    (*choices_extra)[row][t2 - 1] = '\0';
+    (*choices_extra)[row][t2] = '\0';
     row++;
   }
 
