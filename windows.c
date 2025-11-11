@@ -317,7 +317,8 @@ void print_out(WINDOW *win,
     (void) mvwaddstr(win, 0, 2, title);
 
     (void) mvwaddstr(win, 1, 2, query_headers[query]);
-    
+    y++;
+
     for (i = starting_index; i < end; ++i, y++) {
         if (highlight == i) /* High light the present choice  */
         {

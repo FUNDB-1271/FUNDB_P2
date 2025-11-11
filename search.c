@@ -308,16 +308,6 @@ void    results_search(char * from, char *to, char *date,
 
 /**********************************************                 READ QUERY RESULTS                        **************************************************+*/
 
-  sprintf(header, "%-15s %-15s %-15s %-20s %-20s %-15s\n",
-    "Flight", "Seat", "Connections", "Departure", "Arrival", "Duration");
-
-  /* Guardar el encabezado como primera fila del menú */
-  strncpy((*choices)[row], header, strlen(header) + 1);
-  (*choices)[row][strlen(header)] = '\0';
-  strncpy((*choices_extra)[row], "", strlen("") + 1);
-  (*choices_extra)[row][strlen("")] = '\0';
-  row++;
-
   /* importante que el tope del bucle sea MAX_RESULTS para guardar más de una página */
   while (SQL_SUCCEEDED(SQLFetch(stmt)) && row < MAX_RESULTS) 
   { 
