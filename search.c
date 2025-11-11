@@ -330,20 +330,20 @@ void    results_search(char * from, char *to, char *date,
     }
 
     /* set result row */
-    t1 = strlen(buf1)+1;
+    t1 = strlen(buf1);
     t1 = MIN(t1, MAX_TUPLE_LENGTH);
-    t1 = MIN(t1, max_cols);
+    t1 = MIN(t1, max_cols - 1);
 
     /* set result info (message attributes) */
-    t2 = strlen(buf2) + 1;
+    t2 = strlen(buf2);
     t2 = MIN(t2, MAX_MESSAGE_LENGTH);
-    t2 = MIN(t2, max_cols);
+    t2 = MIN(t2, max_cols - 1);
 
     /* copy up to max_length-1 characters, ensure NULL termination */
     strncpy((*choices)[row], (char*)buf1, t1);
-    (*choices)[row][t1 - 1] = '\0';
+    (*choices)[row][t1] = '\0';
     strncpy((*choices_extra)[row], (char*)buf2, t2);
-    (*choices_extra)[row][t2 - 1] = '\0';
+    (*choices_extra)[row][t2] = '\0';
     row++;
   }
 
