@@ -39,7 +39,7 @@ tickets_with_boarding AS (
         t.aircraft_code,
         t.passenger_name,
         t.rn_ticket + COALESCE(mb.max_boarding_no,0) AS boarding_no,
-        t.rn_ticket  -- opcional si quieres usarlo luego
+        t.rn_ticket 
     FROM tickets_to_assign t
     LEFT JOIN max_boarding mb ON t.flight_id = mb.flight_id
 ),
