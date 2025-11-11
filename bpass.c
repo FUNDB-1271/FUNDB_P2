@@ -70,7 +70,7 @@ int results_bpass(char * book_ref, int * n_choices, char *** choices, int max_le
         "    SELECT "
         "        s.seat_no, "
         "        f.flight_id, "
-        "        ROW_NUMBER() OVER (PARTITION BY f.flight_id ORDER BY s.seat_no) AS rn_seat "
+        "        ROW_NUMBER() OVER (PARTITION BY f.flight_id ORDER BY f.aircraft_code, s.seat_no) AS rn_seat "
         "    FROM seats s "
         "    JOIN flights f ON s.aircraft_code = f.aircraft_code "
         "    LEFT JOIN boarding_passes bp ON s.seat_no = bp.seat_no AND f.flight_id = bp.flight_id "
@@ -110,7 +110,10 @@ int results_bpass(char * book_ref, int * n_choices, char *** choices, int max_le
 
     /* Crear un manejador de sentencia */
     SQLAllocHandle(SQL_HANDLE_STMT, dbc, &stmt);
+
+    /* Limitar y bloquear la transaccion para que no se asignen los mismos asientos a la vez */
     SQLExecDirect(stmt, (SQLCHAR*)"BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;", SQL_NTS);
+
     SQLPrepare(stmt, (SQLCHAR*) query, SQL_NTS);
 
 

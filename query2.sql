@@ -47,7 +47,7 @@ available_seats AS (
     SELECT 
         s.seat_no,
         f.flight_id,
-        ROW_NUMBER() OVER (PARTITION BY f.flight_id ORDER BY s.seat_no) AS rn_seat
+        ROW_NUMBER() OVER (PARTITION BY f.flight_id ORDER BY f.aircraft_code, s.seat_no) AS rn_seat
     FROM seats s
     JOIN flights f ON s.aircraft_code = f.aircraft_code
     LEFT JOIN boarding_passes bp ON s.seat_no = bp.seat_no AND f.flight_id = bp.flight_id
