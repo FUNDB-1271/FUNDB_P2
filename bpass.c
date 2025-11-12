@@ -142,7 +142,7 @@ int results_bpass(char * book_ref, int * n_choices, char *** choices, int max_le
     /* Leer y mostrar resultados */
     while (SQL_SUCCEEDED(ret = SQLFetch(stmt)) && row < MAX_RESULTS) { /* importante que el tope del bucle sea MAX_RESULTS para guardar más de una página */
         passenger_name[20] = '\0';
-        sprintf(buf, "%-25s %-25s%-25s%-25s\n",
+        sprintf(buf, "%-25s %-25s%-25s%-25s",
            passenger_name, flight_id, schedule_departure, seat_no);
         
         t = strlen(buf)+1;
