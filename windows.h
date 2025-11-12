@@ -77,6 +77,7 @@ void print_out(WINDOW *win,
                int menuitems,
                int starting_index,
                int screen_rows, 
+               int screen_cols,
                int highlight,
                char *title,
                int query);

@@ -7,7 +7,7 @@
 
 const char *query_headers[] = 
     {    
-    "Flight         Seat           Connections    Departure           Arrival             Duration       ",
+    "Flight          Seats           Connections     Departure            Arrival              Duration        ",
     "Passenger                 Flight                   Departure                Seat                     ",
     ""
     };
@@ -292,7 +292,8 @@ void print_out(WINDOW *win,
                char **choices,
                int menuitems,
                int starting_index,
-               int screen_rows, 
+               int screen_rows,
+               int screen_cols, 
                int highlight,
                char *title, 
                int query)
@@ -331,8 +332,7 @@ void print_out(WINDOW *win,
 
     /* limpiar líneas que no se van a rellenar en la nueva página */
     for (i = end; i < starting_index + screen_rows; ++i, y++) {
-        wmove(win, y, x);
-        wclrtoeol(win);
+        mvwprintw(win, y, x, "%-*s", screen_cols - 3, ""); /* -3 accounts for the out-field borders and margins*/
     }
 
     (void) wrefresh(win);

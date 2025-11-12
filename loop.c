@@ -120,7 +120,7 @@ void loop(_Windows *windows, _Menus *menus,
                     starting_row_index = (out_highlight / screen_rows) * screen_rows;
 
                     print_out(out_win, menus->out_win_choices, n_out_choices,
-                              starting_row_index, screen_rows, out_highlight, windows->out_title, VOID_PRINT);
+                              starting_row_index, screen_rows, windows->cols_out_win, out_highlight, windows->out_title, VOID_PRINT);
                 }
                 break;
 
@@ -133,7 +133,7 @@ void loop(_Windows *windows, _Menus *menus,
                     starting_row_index = (out_highlight / screen_rows) * screen_rows;
 
                     print_out(out_win, menus->out_win_choices, n_out_choices,
-                              starting_row_index, screen_rows, out_highlight, windows->out_title, VOID_PRINT);
+                              starting_row_index, screen_rows, windows->cols_out_win, out_highlight, windows->out_title, VOID_PRINT);
                 }
                 break;            
             case KEY_RIGHT:
@@ -162,7 +162,7 @@ void loop(_Windows *windows, _Menus *menus,
                     (void) wrefresh(windows->form_bpass_win);
                 }  else if (focus == FOCUS_RIGHT){
                     out_highlight = MAX(out_highlight - 1, 0);
-                    print_out(out_win, menus->out_win_choices, n_out_choices, starting_row_index, screen_rows,
+                    print_out(out_win, menus->out_win_choices, n_out_choices, starting_row_index, screen_rows, windows->cols_out_win,
                               out_highlight, windows->out_title, VOID_PRINT);
                 }
                 break;
@@ -178,7 +178,7 @@ void loop(_Windows *windows, _Menus *menus,
                     (void) wrefresh(windows->form_bpass_win);
                 } else if (focus == FOCUS_RIGHT){
                     out_highlight = MIN(out_highlight + 1, n_out_choices - 1);
-                    print_out(out_win, menus->out_win_choices, n_out_choices, starting_row_index, screen_rows,
+                    print_out(out_win, menus->out_win_choices, n_out_choices, starting_row_index, screen_rows, windows->cols_out_win,
                               out_highlight, windows->out_title, VOID_PRINT);
                 }
                 break; 
@@ -247,7 +247,7 @@ void loop(_Windows *windows, _Menus *menus,
                 tmpStr3 = field_buffer((forms->search_form_items)[5], 0);
                 n_out_choices=1;
                 results_search(tmpStr1, tmpStr2, tmpStr3, &n_out_choices, & (menus->out_win_choices), &(menus->out_win_extra), windows->cols_out_win);
-                print_out(out_win, menus->out_win_choices, n_out_choices, starting_row_index, screen_rows, 
+                print_out(out_win, menus->out_win_choices, n_out_choices, starting_row_index, screen_rows, windows->cols_out_win,
                           out_highlight, windows->out_title, SEARCH_PRINT);
                 if ((bool)DEBUG) {
                     (void)snprintf(buffer, 128, "arg1=%s, arg2=%s, arg3=%s",  tmpStr1, tmpStr2, tmpStr3);
@@ -274,7 +274,7 @@ void loop(_Windows *windows, _Menus *menus,
                 }
             }
             else if ((choice == BPASS) && (focus == FOCUS_LEFT)) {
-                out_highlight = 1;
+                out_highlight = 0;
                 starting_row_index = 0;
                 for(i=0; i< rows_out_window ; i++)
                     (menus->out_win_choices)[i][0] = '\0';
@@ -283,7 +283,7 @@ void loop(_Windows *windows, _Menus *menus,
                 tmpStr1 = field_buffer((forms->bpass_form_items)[1], 0);
                 results_bpass(tmpStr1, &n_out_choices, & (menus->out_win_choices),
                               windows->cols_out_win-4, windows->rows_out_win-2);
-                print_out(out_win, menus->out_win_choices, n_out_choices, starting_row_index, screen_rows, 
+                print_out(out_win, menus->out_win_choices, n_out_choices, starting_row_index, screen_rows, windows->cols_out_win,
                           out_highlight, windows->out_title, BPASS_PRINT);
                 if (n_out_choices <= 1){
                     sprintf(buffer, "No existen tickets sin tarjeta de embarque bajo la reserva con id: %s", tmpStr1);
@@ -302,8 +302,10 @@ void loop(_Windows *windows, _Menus *menus,
                 }
             }
             else if ((choice == BPASS) && focus == (FOCUS_RIGHT)) {
+                sprintf(buffer, "%-25s %-25s%-25s%-25s", "Passenger", "Flight", "Departure", "Seat");
+                write_msg(msg_win, buffer, 1, 1, windows->msg_title,1);
                 write_msg(msg_win, (menus->out_win_choices)[out_highlight],
-                          -1, -1, windows->msg_title, 1);
+                          2, 1, windows->msg_title, 0);
             }
         }
         choice = -1;
