@@ -24,10 +24,10 @@ void    results_search(char * from, char *to, char *date,
   SQLINTEGER flight_id, flight_id2;
   SQLINTEGER number_of_seats;
   SQLINTEGER connection_flights;
-  SQLCHAR f1_departure_date[256], f2_departure_date[256];
-  SQLCHAR f1_arrival_date[256], f2_arrival_date[256];
-  SQLCHAR f1_aircraft_code[256], f2_aircraft_code[256];
-  SQLCHAR time_elapsed[256];
+  SQLCHAR f1_departure_date[64], f2_departure_date[64];
+  SQLCHAR f1_arrival_date[64], f2_arrival_date[64];
+  SQLCHAR f1_aircraft_code[32], f2_aircraft_code[32];
+  SQLCHAR time_elapsed[64];
   SQLLEN len1, len2, len3, len4, len5, len6, len7, len8, len9, len10, len11;
   FILE *f = NULL;
   char buf1[512], buf2[512];

@@ -301,11 +301,13 @@ void print_out(WINDOW *win,
  *
  * @param win
  * @param choices list of fields
+ * @param menuitems number of items in the choices array
  * @param starting_index first row to print's index
  * @param screen_rows max number of rows to print in each page
- * @param menuitems number of fields (maximum number of rows)
+ * @param screen_cols max number of cols to print in the out window
  * @param highlight highlight this row (0 -> first row)
- * @param title
+ * @param title title of window
+ * @param query integer containing which header to print atop the out window
  */
 {
     int x=0, y=0, i=0;

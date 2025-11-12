@@ -6,7 +6,7 @@
 ########################################################################################
 
 CC = gcc -g
-CFLAGS ?= -Wall -Wextra -pedantic -ansi
+CFLAGS ?= -Wall -Wextra -pedantic
 LDLIBS ?= -lodbc -lcurses -lpanel -lmenu -lform
 EXE = menu
 OBJ = $(EXE).o bpass.o loop.o search.o windows.o odbc.o
