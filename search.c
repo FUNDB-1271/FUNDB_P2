@@ -29,7 +29,6 @@ void    results_search(char * from, char *to, char *date,
   SQLCHAR f1_aircraft_code[32], f2_aircraft_code[32];
   SQLCHAR time_elapsed[64];
   SQLLEN len1, len2, len3, len4, len5, len6, len7, len8, len9, len10, len11;
-  FILE *f = NULL;
   char buf1[512], buf2[512];
   int row = 0;
   int t2 = 0, t1 = 0;
@@ -124,8 +123,6 @@ void    results_search(char * from, char *to, char *date,
 "ORDER BY time_elapsed, flight_1_departure;";
 
 
-  if (!(f = fopen("salida.txt", "w"))) return;
-
   ret = odbc_connect(&env, &dbc);
   if(!SQL_SUCCEEDED(ret)) {
     return;
@@ -142,8 +139,6 @@ void    results_search(char * from, char *to, char *date,
     SQLFreeHandle(SQL_HANDLE_STMT, stmt);
     return;
   }
-
-  fprintf(f, "%s\n", query);
 
   ret = SQLBindParameter(stmt, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, strlen(from), 0, from, strlen(from)+1, NULL);
   if (!SQL_SUCCEEDED(ret)) {
@@ -349,8 +344,6 @@ void    results_search(char * from, char *to, char *date,
 
   *n_choices = row;
   SQLCloseCursor(stmt);
-
-  fclose(f);
 
   fflush(stdout);
   printf("\n"); 
