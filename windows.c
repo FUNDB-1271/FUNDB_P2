@@ -7,7 +7,7 @@
 
 const char *query_headers[] = 
     {    
-    "Flight         Seat           Connections    Departure           Arrival             Duration       ",
+    "Flight          Seats           Connections     Departure            Arrival              Duration        ",
     "Passenger                 Flight                   Departure                Seat                     ",
     ""
     };

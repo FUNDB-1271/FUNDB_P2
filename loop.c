@@ -302,8 +302,10 @@ void loop(_Windows *windows, _Menus *menus,
                 }
             }
             else if ((choice == BPASS) && focus == (FOCUS_RIGHT)) {
+                sprintf(buffer, "%-25s %-25s%-25s%-25s", "Passenger", "Flight", "Departure", "Seat");
+                write_msg(msg_win, buffer, 1, 1, windows->msg_title,1);
                 write_msg(msg_win, (menus->out_win_choices)[out_highlight],
-                          -1, -1, windows->msg_title, 1);
+                          2, 1, windows->msg_title, 0);
             }
         }
         choice = -1;
