@@ -10,7 +10,7 @@
  * Programa que ejecuta una query compleja con CTEs e INSERT RETURNING
  */
 
-int results_bpass(char * book_ref, int * n_choices, char *** choices, int max_length, int max_rows) {
+int results_bpass(char * book_ref, int * n_choices, char *** choices, int max_length) {
     SQLHENV env;
     SQLHDBC dbc;
     SQLHSTMT stmt;

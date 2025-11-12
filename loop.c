@@ -282,7 +282,7 @@ void loop(_Windows *windows, _Menus *menus,
                 (void) form_driver(forms->bpass_form, REQ_VALIDATION);
                 tmpStr1 = field_buffer((forms->bpass_form_items)[1], 0);
                 results_bpass(tmpStr1, &n_out_choices, & (menus->out_win_choices),
-                              windows->cols_out_win-4, windows->rows_out_win-2);
+                              windows->cols_out_win-4);
                 print_out(out_win, menus->out_win_choices, n_out_choices, starting_row_index, screen_rows, windows->cols_out_win,
                           out_highlight, windows->out_title, BPASS_PRINT);
                 if (n_out_choices <= 1){
