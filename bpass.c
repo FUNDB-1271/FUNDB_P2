@@ -15,7 +15,7 @@ int results_bpass(char * book_ref, int * n_choices, char *** choices, int max_le
     SQLHDBC dbc;
     SQLHSTMT stmt;
     SQLRETURN ret; /* Estado de retorno de la API ODBC */
-    SQLCHAR passenger_name[32], flight_id[32], seat_no[32], schedule_departure[32];
+    SQLCHAR passenger_name[32], flight_id[32], seat_no[32], schedule_departure[64];
     int row = 0;
     char buf[512];
     int t = 0;
@@ -70,7 +70,7 @@ int results_bpass(char * book_ref, int * n_choices, char *** choices, int max_le
         "    SELECT "
         "        s.seat_no, "
         "        f.flight_id, "
-        "        ROW_NUMBER() OVER (PARTITION BY f.flight_id ORDER BY s.seat_no) AS rn_seat "
+        "        ROW_NUMBER() OVER (PARTITION BY f.flight_id ORDER BY f.aircraft_code, s.seat_no) AS rn_seat "
         "    FROM seats s "
         "    JOIN flights f ON s.aircraft_code = f.aircraft_code "
         "    LEFT JOIN boarding_passes bp ON s.seat_no = bp.seat_no AND f.flight_id = bp.flight_id "
@@ -110,17 +110,22 @@ int results_bpass(char * book_ref, int * n_choices, char *** choices, int max_le
 
     /* Crear un manejador de sentencia */
     SQLAllocHandle(SQL_HANDLE_STMT, dbc, &stmt);
+
+    /* Limitar y bloquear la transaccion para que no se asignen los mismos asientos a la vez */
+    SQLExecDirect(stmt, (SQLCHAR*)"BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;", SQL_NTS);
+
     SQLPrepare(stmt, (SQLCHAR*) query, SQL_NTS);
 
 
-    SQLBindParameter(stmt, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, sizeof(book_ref), 0, book_ref, sizeof(book_ref), NULL);
-    SQLBindParameter(stmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, sizeof(book_ref), 0, book_ref, sizeof(book_ref), NULL);
+    SQLBindParameter(stmt, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, strlen(book_ref), 0, book_ref, 0, NULL);
+
 
     /* Preparar y ejecutar */
     ret = SQLExecute(stmt);
     if (!SQL_SUCCEEDED(ret)) {
         fprintf(stderr, "Error al ejecutar la query.\n");
         odbc_extract_error("SQLExecDirect", stmt, SQL_HANDLE_STMT);
+        SQLExecDirect(stmt, (SQLCHAR*)"ROLLBACK;", SQL_NTS);
         SQLFreeHandle(SQL_HANDLE_STMT, stmt);
         odbc_disconnect(env, dbc);
         return EXIT_FAILURE;
@@ -136,7 +141,8 @@ int results_bpass(char * book_ref, int * n_choices, char *** choices, int max_le
 
     /* Leer y mostrar resultados */
     while (SQL_SUCCEEDED(ret = SQLFetch(stmt)) && row < MAX_RESULTS) { /* importante que el tope del bucle sea MAX_RESULTS para guardar más de una página */
-        sprintf(buf, "%-25s %-25s%-25s%-25s",
+        passenger_name[20] = '\0';
+        sprintf(buf, "%-25s %-25s%-25s%-25s\n",
            passenger_name, flight_id, schedule_departure, seat_no);
         
         t = strlen(buf)+1;
@@ -149,6 +155,8 @@ int results_bpass(char * book_ref, int * n_choices, char *** choices, int max_le
 
     
     *n_choices = row;
+
+    SQLExecDirect(stmt, (SQLCHAR*)"COMMIT;", SQL_NTS);
     SQLCloseCursor(stmt);
 
     fflush(stdout);
