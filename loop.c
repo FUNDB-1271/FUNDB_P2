@@ -85,7 +85,7 @@ void loop(_Windows *windows, _Menus *menus,
         ch = getch(); /* get char typed by user */
         if ((bool)DEBUG) {
             (void)snprintf(buffer, 128, "key pressed %d %c (%d)",  ch, ch, item_index(auxItem));
-            write_msg(msg_win, buffer, -1, -1, windows->msg_title, 1);
+            write_msg(msg_win, buffer, 2, 2, windows->msg_title, 1);
         }
         switch (ch) {
             case KEY_LEFT:
